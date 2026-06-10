@@ -23,10 +23,6 @@ import java.nio.channels.FileChannel
  */
 class MlPanelDetector private constructor(
     private val interpreter: Interpreter,
-    private val confidenceThreshold: Float = 0.25f,
-    private val nmsIoU: Float = 0.45f,
-    private val containmentThreshold: Float = 0.6f,
-    private val minAreaFraction: Float = 0.008f,
 ) : PanelSource {
 
     private val lock = Any()
@@ -34,6 +30,10 @@ class MlPanelDetector private constructor(
     private val inputTensor = interpreter.getInputTensor(0)
     private val outputTensor = interpreter.getOutputTensor(0)
     private val inputSize = inputTensor.shape().let { if (it.size == 4) it[1] else 640 } // NHWC
+
+    // YOLO output decoding (filter + NMS + letterbox-undo) is shared with iOS so both platforms
+    // detect identically; only input building and inference are platform-specific here.
+    private val decoder = YoloPanelDecoder(inputSize = inputSize)
 
     init {
         Log.i(
@@ -61,31 +61,20 @@ class MlPanelDetector private constructor(
     }
 
     /** ML detections for one page, normalized to [0,1]; page dimensions are in pixels. */
-    private data class DetectResult(
-        val panels: List<Panel>,
-        val bubbles: List<Panel>,
-        val pageW: Int,
-        val pageH: Int,
-    )
-
     private fun run(page: Bitmap): DetectResult {
         val bw = page.width
         val bh = page.height
-        val scale = minOf(inputSize / bw.toFloat(), inputSize / bh.toFloat())
-        val newW = (bw * scale).toInt().coerceAtLeast(1)
-        val newH = (bh * scale).toInt().coerceAtLeast(1)
-        val padX = (inputSize - newW) / 2
-        val padY = (inputSize - newH) / 2
+        val lb = Letterbox.fit(bw, bh, inputSize)
 
-        val resized = Bitmap.createScaledBitmap(page, newW, newH, true)
-        val input = buildInput(resized, newW, newH, padX, padY)
+        val resized = Bitmap.createScaledBitmap(page, lb.newW, lb.newH, true)
+        val input = buildInput(resized, lb.newW, lb.newH, lb.padX, lb.padY)
         if (resized != page) resized.recycle()
 
         val outBuf = ByteBuffer.allocateDirect(outputTensor.numBytes()).order(ByteOrder.nativeOrder())
         interpreter.run(input, outBuf)
 
         val raw = readFloats(outBuf, outputTensor)
-        return decode(raw, outputTensor.shape(), scale, padX, padY, bw, bh)
+        return decoder.decode(raw, outputTensor.shape(), lb, bw, bh)
     }
 
     /** Fills the model input buffer with the letterboxed RGB image (handles float or quantized). */
@@ -141,149 +130,11 @@ class MlPanelDetector private constructor(
         return out
     }
 
-    /**
-     * Decodes YOLO output into panel boxes. Handles the two common layouts:
-     *  - end-to-end (NMS-free): `[1, numDet, 6]` rows of `[x1,y1,x2,y2,score,cls]` (numDet small).
-     *  - raw: `[1, 4+nc, anchors]` or `[1, anchors, 4+nc]` of `[cx,cy,w,h,cls0,cls1]` (anchors large)
-     *    → confidence filter + NMS.
-     * Coordinates may be normalized (≤1) or in input pixels; both are handled.
-     */
-    private fun decode(
-        raw: FloatArray,
-        shape: IntArray,
-        scale: Float,
-        padX: Int,
-        padY: Int,
-        bw: Int,
-        bh: Int,
-    ): DetectResult {
-        if (shape.size != 3) {
-            Log.w(TAG, "Unexpected output rank ${shape.size}; shape=${shape.toList()}")
-            return DetectResult(emptyList(), emptyList(), bw, bh)
-        }
-        val d1 = shape[1]
-        val d2 = shape[2]
-        val transposed = d1 < d2          // [1, attrs, anchors]
-        val attrs = if (transposed) d1 else d2
-        val preds = if (transposed) d2 else d1
-        fun at(pred: Int, attr: Int) = if (transposed) raw[attr * preds + pred] else raw[pred * attrs + attr]
-
-        if (attrs < 6) {
-            Log.w(TAG, "Unexpected attrs=$attrs (shape=${shape.toList()})")
-            return DetectResult(emptyList(), emptyList(), bw, bh)
-        }
-
-        val endToEnd = preds <= 1000
-
-        // Detect coordinate normalization by peeking at a few values.
-        var maxCoord = 0f
-        var sampled = 0
-        var p = 0
-        while (p < preds && sampled < 64) {
-            val v = maxOf(at(p, 0), at(p, 1), at(p, 2), at(p, 3))
-            if (v.isFinite()) { maxCoord = maxOf(maxCoord, v); sampled++ }
-            p++
-        }
-        val coordScale = if (maxCoord <= 1.5f) inputSize.toFloat() else 1f
-
-        val panelBoxes = ArrayList<FloatArray>() // x1,y1,x2,y2,score (input-pixel space)
-        val bubbleBoxes = ArrayList<FloatArray>()
-
-        for (i in 0 until preds) {
-            val cls: Int
-            val score: Float
-            if (endToEnd) {
-                score = at(i, 4)
-                cls = at(i, 5).toInt()
-            } else {
-                val cls0 = at(i, 4); val cls1 = at(i, 5)
-                if (cls0 >= cls1) { cls = PANEL_CLASS; score = cls0 } else { cls = TEXT_CLASS; score = cls1 }
-            }
-            if (score < confidenceThreshold || (cls != PANEL_CLASS && cls != TEXT_CLASS)) continue
-
-            val a = at(i, 0) * coordScale
-            val b = at(i, 1) * coordScale
-            val c = at(i, 2) * coordScale
-            val d = at(i, 3) * coordScale
-            val x1: Float; val y1: Float; val x2: Float; val y2: Float
-            if (endToEnd) { x1 = a; y1 = b; x2 = c; y2 = d } // xyxy
-            else { x1 = a - c / 2f; y1 = b - d / 2f; x2 = a + c / 2f; y2 = b + d / 2f } // cxcywh
-            val box = floatArrayOf(x1, y1, x2, y2, score)
-            if (cls == PANEL_CLASS) panelBoxes.add(box) else bubbleBoxes.add(box)
-        }
-
-        // Suppress overlapping/nested duplicates within each class.
-        val panels = toPanels(suppress(panelBoxes), scale, padX, padY, bw, bh, minAreaFraction)
-        val bubbles = toPanels(suppress(bubbleBoxes), scale, padX, padY, bw, bh, 0f)
-
-        Log.i(TAG, "ml decode: preds=$preds endToEnd=$endToEnd coordScale=$coordScale rawPanels=${panels.size} bubbles=${bubbles.size}")
-        return DetectResult(panels, bubbles, bw, bh)
-    }
-
-    /** Filters by min area, undoes the letterbox, and normalizes boxes to [0,1] page coordinates. */
-    private fun toPanels(
-        boxes: List<FloatArray>,
-        scale: Float,
-        padX: Int,
-        padY: Int,
-        bw: Int,
-        bh: Int,
-        minAreaFrac: Float,
-    ): List<Panel> {
-        val minArea = minAreaFrac * inputSize * inputSize
-        return boxes.mapNotNull { box ->
-            val w = (box[2] - box[0]).coerceAtLeast(0f)
-            val h = (box[3] - box[1]).coerceAtLeast(0f)
-            if (w * h < minArea) return@mapNotNull null
-            val l = ((box[0] - padX) / scale / bw).coerceIn(0f, 1f)
-            val t = ((box[1] - padY) / scale / bh).coerceIn(0f, 1f)
-            val r = ((box[2] - padX) / scale / bw).coerceIn(0f, 1f)
-            val bo = ((box[3] - padY) / scale / bh).coerceIn(0f, 1f)
-            if (r > l && bo > t) Panel(l, t, r, bo) else null
-        }
-    }
-
-    /**
-     * Greedy suppression by confidence: a box is dropped if it overlaps an already-kept box too
-     * much (IoU) or is largely contained within one. This removes duplicate detections and panels
-     * nested inside a larger panel, which is what caused "zooms into the same region again".
-     */
-    private fun suppress(boxes: List<FloatArray>): List<FloatArray> {
-        val sorted = boxes.sortedByDescending { it[4] }
-        val kept = ArrayList<FloatArray>()
-        for (box in sorted) {
-            val redundant = kept.any { iou(it, box) > nmsIoU || containedFraction(box, it) > containmentThreshold }
-            if (!redundant) kept.add(box)
-        }
-        return kept
-    }
-
-    /** Fraction of [inner]'s area that lies inside [outer]. */
-    private fun containedFraction(inner: FloatArray, outer: FloatArray): Float {
-        val ix = (minOf(inner[2], outer[2]) - maxOf(inner[0], outer[0])).coerceAtLeast(0f)
-        val iy = (minOf(inner[3], outer[3]) - maxOf(inner[1], outer[1])).coerceAtLeast(0f)
-        val inter = ix * iy
-        val innerArea = (inner[2] - inner[0]) * (inner[3] - inner[1])
-        return if (innerArea <= 0f) 0f else inter / innerArea
-    }
-
-    private fun iou(a: FloatArray, b: FloatArray): Float {
-        val ix = (minOf(a[2], b[2]) - maxOf(a[0], b[0])).coerceAtLeast(0f)
-        val iy = (minOf(a[3], b[3]) - maxOf(a[1], b[1])).coerceAtLeast(0f)
-        val inter = ix * iy
-        val areaA = (a[2] - a[0]) * (a[3] - a[1])
-        val areaB = (b[2] - b[0]) * (b[3] - b[1])
-        val union = areaA + areaB - inter
-        return if (union <= 0f) 0f else inter / union
-    }
-
     fun close() = runCatching { interpreter.close() }
 
     companion object {
         private const val TAG = "MlPanelDetector"
         private const val MODEL = "manga_panel_detector_int8.tflite"
-        private const val PANEL_CLASS = 0
-        private const val TEXT_CLASS = 1
 
         /** Loads the bundled model; returns null (and logs) if it can't be loaded. */
         fun tryCreate(context: Context): MlPanelDetector? = try {

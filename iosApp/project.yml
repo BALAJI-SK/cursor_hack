@@ -16,8 +16,10 @@ packages:
   ZIPFoundation:
     url: https://github.com/weichsel/ZIPFoundation
     from: "0.9.19"
-  # FOSS RAR5 reader (BSD-licensed libarchive, prebuilt xcframework) — used to convert imported
-  # CBR/RAR archives to CBZ on import so the reader only ever handles plain ZIP.
+  # FOSS RAR5 reader: libarchive's BSD-licensed C library as a prebuilt xcframework. We depend on
+  # the raw `libarchive` C product (not the package's Swift wrapper, whose writer fails Swift 6
+  # strict-concurrency checks on current toolchains) and read it via a small C-API wrapper — we
+  # only need to read CBR/RAR and repackage as CBZ.
   SwiftArchive:
     url: https://github.com/matteo-pacini/libarchive-for-swift
     exactVersion: "1.0.0"
@@ -31,7 +33,7 @@ targets:
     dependencies:
       - package: ZIPFoundation
       - package: SwiftArchive
-        product: SwiftArchive
+        product: libarchive
     info:
       path: Sources/Info.plist
       properties:

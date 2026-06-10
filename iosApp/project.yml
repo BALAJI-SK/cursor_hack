@@ -30,6 +30,9 @@ targets:
       properties:
         CFBundleDisplayName: Chika
         UILaunchScreen: {}
+        UIAppFonts:
+          - Anton-Regular.ttf
+          - Archivo-Variable.ttf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         LSSupportsOpeningDocumentsInPlace: false

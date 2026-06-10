@@ -1,5 +1,4 @@
-# OpenCV uses JNI; keep its classes and native methods.
--keep class org.opencv.** { *; }
+# Keep all JNI native method signatures (TFLite, 7-Zip-JBinding).
 -keepclasseswithmembernames class * {
     native <methods>;
 }

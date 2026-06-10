@@ -71,8 +71,7 @@ CI builds the debug APK on every push/PR — see [`.github/workflows/ci.yml`](.g
    row).
 3. The **planner** merges runs of small adjacent panels (capped for readability) and divides
    oversized panels with a single cut placed between bubble groups.
-4. A classical OpenCV detector and a whole-page fallback cover the cases where the model finds
-   nothing.
+4. If the model finds nothing on a page, the reader falls back to showing the whole page.
 
 ## Architecture
 
@@ -81,14 +80,14 @@ data/archive   ComicArchive: ZipComicArchive (CBZ), RarComicArchive (CBR/RAR5 vi
 data/page      PageLoader — downsampling decode + LRU bitmap cache
 data/db        Room (ComicEntity / dao / db)
 data/library   LibraryRepository — import (copy + cover), list, progress, delete
-detection      MlPanelDetector (TFLite) · PanelDetector (OpenCV fallback) · PanelPlanner · ordering
+detection      MlPanelDetector (TFLite) · PanelPlanner (merge/divide) · PanelOrdering · whole-page fallback
 ui/reader      ReaderViewModel (page→panel state machine) + ReaderScreen (camera, gestures, chrome)
 ui/library     LibraryViewModel + LibraryScreen
 ui/brand       Chika component kit (mark, reticle, halftone, starburst, page coin, wordmark)
 ui/theme       palette + Anton/Archivo typography
 ```
 
-**Stack:** Kotlin · Jetpack Compose (Material 3) · Coroutines · Room · OpenCV · TensorFlow Lite ·
+**Stack:** Kotlin · Jetpack Compose (Material 3) · Coroutines · Room · TensorFlow Lite ·
 Apache Commons Compress · 7-Zip-JBinding.
 
 ## License
@@ -105,4 +104,4 @@ license.
 
 - Panel-detection model: [`leoxs22/manga-panel-detector-yolo26n`](https://huggingface.co/leoxs22/manga-panel-detector-yolo26n) (Apache-2.0), trained on Manga109-s.
 - Fonts: **Anton** and **Archivo** (SIL Open Font License 1.1).
-- **OpenCV**, **TensorFlow Lite**, **Apache Commons Compress**, **7-Zip-JBinding-4Android**.
+- **TensorFlow Lite**, **Apache Commons Compress**, **7-Zip-JBinding-4Android**.

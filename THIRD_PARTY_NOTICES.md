@@ -11,7 +11,6 @@ Chika depends on or bundles, along with the obligations each imposes. Full licen
 |---|---|---|---|
 | AndroidX / Jetpack Compose / Kotlin / Coroutines | Apache-2.0 | yes (in APK) | Keep license + NOTICE attribution |
 | Apache Commons Compress | Apache-2.0 | yes | Keep license + NOTICE |
-| OpenCV (`org.opencv:opencv`) | Apache-2.0 | yes (native `.so`) | Keep license + bundled 3rd-party notices |
 | TensorFlow Lite (`org.tensorflow:tensorflow-lite`) | Apache-2.0 | yes (native `.so`) | Keep license |
 | **7-Zip-JBinding-4Android** | **LGPL-2.1** (+ unRAR, BSD parts) | yes (native `.so`) | See LGPL note below |
 | Panel-detection model (`manga_panel_detector_int8.tflite`) | Apache-2.0 | yes (asset) | Disclose Manga109-s training data |
@@ -31,10 +30,6 @@ Full text: [`THIRD_PARTY_LICENSES/Apache-2.0.txt`](THIRD_PARTY_LICENSES/Apache-2
   Source Project
 - **Apache Commons Compress** `org.apache.commons:commons-compress` — © The Apache Software
   Foundation (used for CBZ/ZIP reading)
-- **OpenCV** `org.opencv:opencv:4.11.0` — © OpenCV team. Apache-2.0 since OpenCV 4.5.0. The AAR
-  bundles permissively-licensed third-party libraries (libjpeg-turbo, libpng, libwebp, libtiff,
-  OpenJPEG, OpenEXR/IlmImf, protobuf, zlib, TBB, etc.); their notices ship inside the OpenCV
-  artifact. (Used for the classical-CV fallback detector.)
 - **TensorFlow Lite** `org.tensorflow:tensorflow-lite:2.16.1` — © The TensorFlow Authors (on-device
   panel-detection inference)
 
@@ -83,7 +78,6 @@ reserved even where the surrounding source is open.
 
 - **Google Play / Apple App Store:** MPL-2.0 is compatible with both stores. (A strong-copyleft
   license such as GPL would not be App-Store compatible — one reason MPL-2.0 was chosen.)
-- **F-Droid:** F-Droid builds from source and disallows prebuilt binaries / non-free blobs. Chika
-  currently bundles **prebuilt** native libraries (OpenCV, 7-Zip-JBinding, TensorFlow Lite) and a
-  **prebuilt model** asset; these would need source builds or would be flagged as anti-features for
-  F-Droid inclusion.
+- **F-Droid:** Chika bundles **prebuilt** native libraries (7-Zip-JBinding, TensorFlow Lite) and a
+  **prebuilt model** asset, pulled from trusted Maven repos (JitPack / Google Maven). These are
+  free-licensed and permitted, though F-Droid may flag the prebuilt model blob.

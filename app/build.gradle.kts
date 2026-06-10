@@ -98,7 +98,6 @@ dependencies {
 
     implementation(libs.commons.compress)
     implementation(libs.sevenzip)
-    implementation(libs.opencv)
 
     implementation(libs.tensorflow.lite)
 }

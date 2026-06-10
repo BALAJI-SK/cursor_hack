@@ -9,3 +9,6 @@
 .cxx
 local.properties
 /app/build/
+
+# Local release artifacts (built by Android Studio / gradle)
+/app/release/

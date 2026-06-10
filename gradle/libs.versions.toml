@@ -11,7 +11,6 @@ room = "2.7.0-alpha13"
 ksp = "2.2.10-2.0.2"
 commonsCompress = "1.27.1"
 sevenzip = "Release-16.02-2.02"
-opencv = "4.11.0"
 tensorflowLite = "2.16.1"
 documentFile = "1.0.1"
 
@@ -36,7 +35,6 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version.ref = "commonsCompress" }
 sevenzip = { group = "com.github.omicronapps", name = "7-Zip-JBinding-4Android", version.ref = "sevenzip" }
-opencv = { group = "org.opencv", name = "opencv", version.ref = "opencv" }
 tensorflow-lite = { group = "org.tensorflow", name = "tensorflow-lite", version.ref = "tensorflowLite" }
 
 [plugins]

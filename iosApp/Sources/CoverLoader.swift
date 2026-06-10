@@ -18,6 +18,21 @@ enum CoverLoader {
         return image
     }
 
+    /// One-line diagnosis of why a cover failed: page count, page-0 byte size, the file's
+    /// magic-number header, and whether the image decoders accept it.
+    static func debugInfo(for url: URL) async -> String {
+        await Task.detached(priority: .utility) {
+            guard let archive = try? CbzArchive(url: url) else { return "open failed" }
+            let n = archive.pageCount
+            guard n > 0 else { return "0 pages" }
+            guard let data = try? archive.readPage(0) else { return "\(n)p · read0 FAILED" }
+            let magic = data.prefix(4).map { String(format: "%02X", $0) }.joined()
+            let imageIO = CGImageSourceCreateWithData(data as CFData, nil) != nil
+            let uiImage = UIImage(data: data) != nil
+            return "\(n)p · pg0 \(data.count)B\n\(magic)\nIIO:\(imageIO) UI:\(uiImage)"
+        }.value
+    }
+
     private static func thumbnail(from data: Data, maxPixel: Int) -> UIImage? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [

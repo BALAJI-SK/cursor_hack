@@ -148,6 +148,7 @@ struct ComicCard: View {
     let issue: String
     let progress: Progress?
     @State private var cover: UIImage?
+    @State private var coverDebug = "…"
 
     private var title: String { url.deletingPathExtension().lastPathComponent.uppercased() }
 
@@ -161,6 +162,12 @@ struct ComicCard: View {
                         ZStack {
                             Chika.maroon
                             Halftone(color: Chika.ink, alpha: 0.18)
+                            // Diagnostic (shown only until covers work): why page-0 didn't render.
+                            Text(coverDebug)
+                                .font(.system(size: 9, design: .monospaced))
+                                .foregroundColor(Chika.cream.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(6)
                         }
                     }
                 }
@@ -184,6 +191,10 @@ struct ComicCard: View {
             .comicShadow(offset: 4, color: .black.opacity(0.55), corner: 4)
 
             progressFooter
+        }
+        .task {
+            cover = await CoverLoader.cover(for: url)
+            if cover == nil { coverDebug = await CoverLoader.debugInfo(for: url) }
         }
     }
 

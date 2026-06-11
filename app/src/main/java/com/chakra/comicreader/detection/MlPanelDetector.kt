@@ -99,10 +99,14 @@ class MlPanelDetector private constructor(
                     g = (px shr 8) and 0xFF
                     b = px and 0xFF
                 }
+                // Grayscale the input (BT.601 luma, replicated to 3 channels): the model trained on
+                // black-and-white manga, so feeding color pages as luma matches its training
+                // distribution and improves detection on color comics. Same formula on iOS.
+                val lum = (0.299f * r + 0.587f * g + 0.114f * b)
                 if (float) {
-                    buf.putFloat(r / 255f); buf.putFloat(g / 255f); buf.putFloat(b / 255f)
+                    val v = lum / 255f; buf.putFloat(v); buf.putFloat(v); buf.putFloat(v)
                 } else {
-                    buf.put(r.toByte()); buf.put(g.toByte()); buf.put(b.toByte())
+                    val bv = lum.toInt().toByte(); buf.put(bv); buf.put(bv); buf.put(bv)
                 }
             }
         }

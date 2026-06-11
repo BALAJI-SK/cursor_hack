@@ -43,11 +43,11 @@ data class DetectResult(
  * Coordinates may be normalized (≤1) or in input pixels; both are detected and handled.
  */
 class YoloPanelDecoder(
-    val inputSize: Int = 640,
-    private val confidenceThreshold: Float = 0.25f,
-    private val nmsIoU: Float = 0.45f,
-    private val containmentThreshold: Float = 0.6f,
-    private val minAreaFraction: Float = 0.008f,
+    val inputSize: Int = DEFAULT_INPUT_SIZE,
+    private val confidenceThreshold: Float = DEFAULT_CONFIDENCE,
+    private val nmsIoU: Float = DEFAULT_NMS_IOU,
+    private val containmentThreshold: Float = DEFAULT_CONTAINMENT,
+    private val minAreaFraction: Float = DEFAULT_MIN_AREA_FRACTION,
 ) {
 
     fun decode(raw: FloatArray, shape: IntArray, lb: Letterbox, pageW: Int, pageH: Int): DetectResult {
@@ -164,5 +164,17 @@ class YoloPanelDecoder(
     companion object {
         const val PANEL_CLASS = 0
         const val TEXT_CLASS = 1
+
+        // The single source of truth for decoder tuning. Both platforms detect with these exact
+        // values — Android via the constructor defaults, iOS via [default]. (Kotlin default args
+        // don't surface to Swift, so iOS would otherwise repeat the literals and could drift.)
+        const val DEFAULT_INPUT_SIZE = 640
+        const val DEFAULT_CONFIDENCE = 0.25f
+        const val DEFAULT_NMS_IOU = 0.45f
+        const val DEFAULT_CONTAINMENT = 0.6f
+        const val DEFAULT_MIN_AREA_FRACTION = 0.008f
+
+        /** A decoder with the default tuning — call this instead of hardcoding thresholds. */
+        fun default(): YoloPanelDecoder = YoloPanelDecoder()
     }
 }

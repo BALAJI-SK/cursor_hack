@@ -21,3 +21,15 @@ local.properties
 
 # Local release artifacts (built by Android Studio / gradle)
 /app/release/
+
+# ML training artifacts (scripts are committed; data/weights are not)
+training/data/
+training/dataset/
+training/runs/
+training/yolo*.pt
+training/*.tflite
+training/*.npy
+
+# Sample comic archives used for local testing (never tracked)
+*.cbr
+*.cbz

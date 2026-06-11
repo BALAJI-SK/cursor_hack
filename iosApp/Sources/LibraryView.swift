@@ -9,11 +9,16 @@ struct LibraryView: View {
     // Resume snapshot keyed by filename, refreshed on appear and when returning from the reader so
     // cards show fresh progress without resetting scroll position.
     @State private var progress: [String: Progress] = [:]
+    // Programmatic navigation, also driven by the QA auto-open hook below.
+    @State private var path = NavigationPath()
+    // Global default reading direction for comics not yet opened (the global half of the
+    // per-comic + default behaviour). Mirrors ReadingPrefs so the pill redraws on toggle.
+    @State private var defaultRTL = ReadingPrefs.defaultRightToLeft
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 Chika.ink.ignoresSafeArea()
                 Halftone(color: Chika.cream, alpha: 0.05).ignoresSafeArea()
@@ -59,8 +64,20 @@ struct LibraryView: View {
             } message: {
                 Text(library.importError ?? "")
             }
-            .onAppear(perform: reloadProgress)
+            .onAppear { reloadProgress(); autoOpenIfDebug() }
         }
+    }
+
+    /// QA hook: when launched with the CHIKA_DEBUG_OPEN env var (an index or filename substring),
+    /// push straight into that comic's reader. Never set in production, so this is a no-op there.
+    private func autoOpenIfDebug() {
+        guard path.isEmpty,
+              let target = ProcessInfo.processInfo.environment["CHIKA_DEBUG_OPEN"],
+              !library.comics.isEmpty else { return }
+        let match = Int(target).flatMap { library.comics.indices.contains($0) ? library.comics[$0] : nil }
+            ?? library.comics.first { $0.lastPathComponent.localizedCaseInsensitiveContains(target) }
+            ?? library.comics.first
+        if let match { path.append(match) }
     }
 
     private func reloadProgress() {
@@ -85,7 +102,24 @@ struct LibraryView: View {
                         .comicShadow(offset: 3, color: .black.opacity(0.6), corner: 3)
                 }
             }
-            OchreBadge(text: "Your Library")
+            HStack(alignment: .center) {
+                OchreBadge(text: "Your Library")
+                Spacer()
+                // Global default direction for new comics; each comic remembers its own once opened.
+                Button {
+                    defaultRTL.toggle()
+                    ReadingPrefs.defaultRightToLeft = defaultRTL
+                } label: {
+                    VStack(alignment: .trailing, spacing: 1) {
+                        KickerText("New comics open", size: 7, color: Chika.creamMuted)
+                        Text(defaultRTL ? "RTL" : "LTR")
+                            .font(.archivo(12)).foregroundColor(Chika.ink)
+                            .padding(.horizontal, 10).padding(.vertical, 4)
+                            .background(Chika.ochre)
+                            .clipShape(RoundedCornerShape(cornerRadius: 3))
+                    }
+                }
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)

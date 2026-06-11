@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -89,6 +90,7 @@ fun LibraryScreen(
     val comics by viewModel.comics.collectAsStateWithLifecycle()
     val importing by viewModel.importing.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
+    val defaultRtl by viewModel.defaultRightToLeft.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var pendingDelete by remember { mutableStateOf<ComicEntity?>(null) }
 
@@ -126,7 +128,36 @@ fun LibraryScreen(
                 ChikaWordmark(Modifier.padding(top = 40.dp, bottom = 4.dp))
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
-                OchreBadge("YOUR LIBRARY", Modifier.padding(top = 2.dp, bottom = 6.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OchreBadge("YOUR LIBRARY")
+                    // Global default direction for new comics; each comic remembers its own once opened.
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "NEW COMICS OPEN",
+                            fontFamily = Archivo,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 7.sp,
+                            color = CreamMuted,
+                        )
+                        Text(
+                            if (defaultRtl) "RTL" else "LTR",
+                            fontFamily = Archivo,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = Ink,
+                            modifier = Modifier
+                                .padding(top = 1.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(Ochre)
+                                .clickable { viewModel.toggleDefaultDirection() }
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                        )
+                    }
+                }
             }
             if (comics.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {

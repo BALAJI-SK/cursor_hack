@@ -1,44 +1,81 @@
 package com.chakra.comicreader.detection
 
 /**
- * Sorts detected panels into reading order.
+ * Sorts detected panels into reading order using a **recursive X-Y cut with straddle tolerance**.
  *
- * Comics are read in rows: top row first, then the next row down; within a row, left-to-right for
- * Western comics (or right-to-left for manga). The tricky part is deciding which panels share a
- * "row" when they are not perfectly aligned. We group panels whose vertical extents overlap by more
- * than [ROW_OVERLAP_RATIO] of the shorter panel's height, then order rows top→down and panels
- * within each row by horizontal position.
+ * Comics are read in rows (top→bottom), and within a row left→right (Western) or right→left (manga).
+ * At each step we look for a straight cut that separates the panels into two groups:
+ *  - a **horizontal** cut (preferred) stacks the groups top→bottom — i.e. rows;
+ *  - a **vertical** cut arranges them by reading direction — i.e. columns.
+ * A panel is allowed to poke slightly across a cut (up to [STRADDLE_TOLERANCE] of its own length) and
+ * is assigned to whichever side holds most of it — so a row of not-perfectly-aligned panels still
+ * splits into one row. A panel that genuinely spans two rows (a tall panel beside stacked ones) makes
+ * the horizontal cut impossible, so we cut vertically first — separating the tall panel from the
+ * stack — then recurse, which is exactly the case a naive "group by row overlap" gets wrong.
  */
 object PanelOrdering {
 
-    private const val ROW_OVERLAP_RATIO = 0.5f
+    /** A panel may cross a cut line by up to this fraction of its own height/width and still be
+     *  assigned cleanly to one side (handles slightly misaligned panels in the same row). */
+    private const val STRADDLE_TOLERANCE = 0.25f
 
     fun order(panels: List<Panel>, rightToLeft: Boolean = false): List<Panel> {
         if (panels.size <= 1) return panels
-
-        val byTop = panels.sortedBy { it.top }
-        val rows = mutableListOf<MutableList<Panel>>()
-        for (panel in byTop) {
-            val row = rows.lastOrNull()
-            if (row != null && row.any { verticalOverlapRatio(it, panel) >= ROW_OVERLAP_RATIO }) {
-                row.add(panel)
-            } else {
-                rows.add(mutableListOf(panel))
-            }
-        }
-
-        return rows
-            .sortedBy { row -> row.minOf { it.top } }
-            .flatMap { row ->
-                if (rightToLeft) row.sortedByDescending { it.left }
-                else row.sortedBy { it.left }
-            }
+        return cut(panels, rightToLeft)
     }
 
-    /** Fraction of the shorter panel's height that the two panels' vertical ranges share. */
-    private fun verticalOverlapRatio(a: Panel, b: Panel): Float {
-        val overlap = (minOf(a.bottom, b.bottom) - maxOf(a.top, b.top)).coerceAtLeast(0f)
-        val shorter = minOf(a.height, b.height).coerceAtLeast(1e-4f)
-        return overlap / shorter
+    private fun cut(panels: List<Panel>, rightToLeft: Boolean): List<Panel> {
+        if (panels.size <= 1) return panels
+
+        // Prefer a horizontal cut → rows, read top to bottom.
+        findCut(panels, vertical = false)?.let { (top, bottom) ->
+            return cut(top, rightToLeft) + cut(bottom, rightToLeft)
+        }
+
+        // Otherwise a vertical cut → columns, read by direction (right group first for manga).
+        findCut(panels, vertical = true)?.let { (left, right) ->
+            return if (rightToLeft) cut(right, rightToLeft) + cut(left, rightToLeft)
+            else cut(left, rightToLeft) + cut(right, rightToLeft)
+        }
+
+        // No clean cut (panels overlap both ways) → stable fallback by top then direction.
+        return panels.sortedWith(
+            if (rightToLeft) compareBy({ it.top }, { -it.left }) else compareBy({ it.top }, { it.left }),
+        )
+    }
+
+    /**
+     * Tries to split [panels] into two non-empty groups along one axis. [vertical] = false cuts
+     * horizontally (returns top group, bottom group); true cuts vertically (left group, right group).
+     * Scans candidate cut lines (panel trailing edges); a line is valid only if every panel sits on
+     * one side or straddles by at most [STRADDLE_TOLERANCE] of its length. Returns null if no line works.
+     */
+    private fun findCut(panels: List<Panel>, vertical: Boolean): Pair<List<Panel>, List<Panel>>? {
+        val start = { p: Panel -> if (vertical) p.left else p.top }
+        val end = { p: Panel -> if (vertical) p.right else p.bottom }
+
+        val maxEnd = panels.maxOf(end)
+        val candidates = panels.map(end).distinct().sorted()
+        for (line in candidates) {
+            if (line >= maxEnd) continue // wouldn't leave anything below/right
+            val first = mutableListOf<Panel>()  // top (or left) side
+            val second = mutableListOf<Panel>() // bottom (or right) side
+            var valid = true
+            for (p in panels) {
+                val s = start(p); val e = end(p)
+                when {
+                    e <= line -> first.add(p)
+                    s >= line -> second.add(p)
+                    else -> {
+                        val len = (e - s).coerceAtLeast(1e-4f)
+                        val crossDepth = minOf(e - line, line - s) // how far it pokes onto the thinner side
+                        if (crossDepth / len > STRADDLE_TOLERANCE) { valid = false; break }
+                        if (line - s >= e - line) first.add(p) else second.add(p) // majority side
+                    }
+                }
+            }
+            if (valid && first.isNotEmpty() && second.isNotEmpty()) return first to second
+        }
+        return null
     }
 }

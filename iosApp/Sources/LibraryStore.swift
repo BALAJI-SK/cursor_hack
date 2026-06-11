@@ -1,5 +1,6 @@
 import Foundation
 import UniformTypeIdentifiers
+import ChikaShared
 
 /// Comics live as plain .cbz files in Documents/Comics. Importing a CBZ/ZIP copies it in; importing
 /// a CBR/RAR converts it to CBZ first (see CbrConverter) so the reader only handles ZIP. The list
@@ -53,7 +54,12 @@ final class LibraryStore: ObservableObject {
         let baseName = url.deletingPathExtension().lastPathComponent
         let dest = dir.appendingPathComponent(baseName + ".cbz")
 
-        if ext == "cbr" || ext == "rar" {
+        // Route by magic bytes (extension is only the fallback), matching Android's
+        // ComicArchiveFactory exactly — so a mislabeled ".cbz" that is really a RAR is converted,
+        // not copied in broken. Detection logic itself lives in the shared ComicFormatDetector.
+        let format = ComicFormatDetector.shared.detect(head: Self.leadingBytes(of: url), fileExtension: ext)
+
+        if format == .cbr {
             // Stage a local copy first so conversion isn't reading a scoped URL on a background Task.
             let staged = FileManager.default.temporaryDirectory
                 .appendingPathComponent(UUID().uuidString).appendingPathExtension(ext)
@@ -87,5 +93,18 @@ final class LibraryStore: ObservableObject {
         try? FileManager.default.removeItem(at: url)
         ReadingProgress.clear(url)
         refresh()
+    }
+
+    /// The first few bytes of [url] as a Kotlin byte array, for shared magic-byte format detection.
+    /// Returns empty (→ extension fallback) if the file can't be read.
+    private static func leadingBytes(of url: URL, count: Int = 8) -> KotlinByteArray {
+        let data: Data = {
+            guard let handle = try? FileHandle(forReadingFrom: url) else { return Data() }
+            defer { try? handle.close() }
+            return (try? handle.read(upToCount: count)) ?? Data()
+        }()
+        let bytes = KotlinByteArray(size: Int32(data.count))
+        for (i, b) in data.enumerated() { bytes.set(index: Int32(i), value: Int8(bitPattern: b)) }
+        return bytes
     }
 }

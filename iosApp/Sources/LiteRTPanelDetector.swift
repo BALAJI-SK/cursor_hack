@@ -9,21 +9,22 @@ import ChikaShared
 /// [1,300,6] out); int8 quantization is internal to the weights.
 final class LiteRTPanelDetector {
     private let interpreter: Interpreter
-    private let inputSize = 640
     // The TFLite interpreter is not thread-safe; serialize inference (matching Android's lock) so
     // overlapping detections — e.g. while scrubbing pages — can't corrupt it and crash the app.
     private let lock = NSLock()
-    private let decoder = YoloPanelDecoder(
-        inputSize: 640,
-        confidenceThreshold: 0.25,
-        nmsIoU: 0.45,
-        containmentThreshold: 0.6,
-        minAreaFraction: 0.008
-    )
+    // Built from the shared Kotlin defaults (the single source of truth Android also uses), so the
+    // thresholds and input size can never drift between platforms. A loosened-gate diagnostic
+    // (conf 0.08 / containment 0.9) recovered ZERO extra panels on dynamic manga layouts: this
+    // end-to-end model emits high-confidence panels or nothing, so missed borderless panels are a
+    // model-training limitation, not a threshold one. Improving them needs a retrained model.
+    private let decoder = YoloPanelDecoder.companion.default()
+    private var inputSize: Int { Int(decoder.inputSize) }
 
     /// nil if the bundled model is missing — callers fall back to whole-page reading.
     init?() {
-        guard let path = Bundle.main.path(forResource: "manga_panel_detector_int8", ofType: "tflite") else {
+        // QA hook: load an alternate bundled .tflite by name (for model A/B experiments).
+        let modelName = ProcessInfo.processInfo.environment["CHIKA_DEBUG_MODEL"] ?? "manga_panel_detector_int8"
+        guard let path = Bundle.main.path(forResource: modelName, ofType: "tflite") else {
             return nil
         }
         do {
@@ -57,6 +58,15 @@ final class LiteRTPanelDetector {
             for (i, d) in shape.enumerated() { kShape.set(index: Int32(i), value: Int32(d)) }
 
             let result = decoder.decode(raw: kRaw, shape: kShape, lb: lb, pageW: Int32(pageW), pageH: Int32(pageH))
+            // EXACT Android parity: run the model's panels through the same shared pipeline
+            // (PanelOrdering → PanelPlanner) and fall back to whole-page only when <2 regions remain —
+            // identical to MlPanelDetector.detect on Android. Android applies NO GutterRefiner and NO
+            // PanelReliability gate, so neither runs here.
+            // QA hook: bypass the planner to see the model's RAW ordered detections (never set in prod).
+            if ProcessInfo.processInfo.environment["CHIKA_DEBUG_RAW"] != nil {
+                let ordered = PanelOrdering.shared.order(panels: result.panels, rightToLeft: rightToLeft)
+                return ordered.count < 2 ? [Panel.companion.FULL_PAGE] : ordered
+            }
             let planned = PanelPipeline.shared.zoomRegions(
                 panels: result.panels, bubbles: result.bubbles,
                 pageW: result.pageW, pageH: result.pageH, rightToLeft: rightToLeft

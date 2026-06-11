@@ -83,11 +83,13 @@ class PageLoader(
     }
 
     companion object {
-        const val DEFAULT_MAX_DIMENSION = 2560
+        val DEFAULT_MAX_DIMENSION = PageConstants.maxPageDimension
 
         fun defaultCacheBytes(): Int {
             val maxMemKb = (Runtime.getRuntime().maxMemory() / 1024L).toInt()
-            return (maxMemKb / 4) * 1024 // a quarter of the heap, in bytes
+            // A quarter of the heap, in bytes, capped — same formula iOS applies to physical RAM.
+            val quarter = (maxMemKb / PageConstants.cacheMemoryDivisor) * 1024
+            return minOf(quarter, PageConstants.cacheMaxBytes)
         }
     }
 }

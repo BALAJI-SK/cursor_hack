@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ComicBookReader"
 include(":app")
+include(":shared")

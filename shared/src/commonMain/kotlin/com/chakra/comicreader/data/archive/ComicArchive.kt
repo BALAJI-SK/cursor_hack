@@ -1,15 +1,13 @@
 package com.chakra.comicreader.data.archive
 
-import java.io.Closeable
-
 /**
  * A comic archive exposing its image pages in reading order.
  *
- * Implementations read from a local [java.io.File] (comics are imported/copied into app storage
- * on add) so that page access is random-access and cheap. Pages are returned as raw encoded bytes;
- * decoding to a bitmap is the [com.chakra.comicreader.data.page.PageLoader]'s job.
+ * Implementations read from a local file (comics are imported/copied into app storage on add) so
+ * that page access is random-access and cheap. Pages are returned as raw encoded bytes; decoding to
+ * a bitmap is the platform page loader's job.
  */
-interface ComicArchive : Closeable {
+interface ComicArchive : AutoCloseable {
 
     /** Number of image pages, after filtering out non-image entries and directories. */
     val pageCount: Int

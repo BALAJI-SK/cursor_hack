@@ -12,6 +12,7 @@ import com.chakra.comicreader.data.archive.ComicFormat
 import com.chakra.comicreader.data.archive.UnsupportedComicException
 import com.chakra.comicreader.data.db.ComicDao
 import com.chakra.comicreader.data.db.ComicEntity
+import com.chakra.comicreader.data.settings.AppSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -29,6 +30,7 @@ import java.util.UUID
 class LibraryRepository(
     private val context: Context,
     private val dao: ComicDao,
+    private val settings: AppSettings,
 ) {
     val comics: Flow<List<ComicEntity>> = dao.observeAll()
 
@@ -90,6 +92,7 @@ class LibraryRepository(
                     coverPath = coverPath,
                     format = format.name,
                     pageCount = pageCount,
+                    rightToLeft = settings.defaultRightToLeft,
                     dateAdded = now,
                     lastOpened = now,
                 ),

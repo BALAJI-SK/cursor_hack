@@ -66,6 +66,13 @@ Full texts: [`THIRD_PARTY_LICENSES/OFL-1.1-Anton.txt`](THIRD_PARTY_LICENSES/OFL-
   disclosure**. See http://www.manga109.org/ for dataset terms.
 - The model was produced with Ultralytics YOLO tooling; the distributed weights are licensed
   Apache-2.0 by their author, which is the basis on which Chika redistributes them.
+- **Licensing caveat (to resolve before any commercial release):** the upstream weights are labelled
+  Apache-2.0, but because they are **trained on Manga109-s** (an academic/research dataset), some
+  readings — e.g. the CoMix project's license, which labels Manga109-trained weights CC BY-NC-SA 4.0
+  (non-commercial) — consider such weights non-commercial. The Manga109-s terms (clause 5) do appear
+  to permit commercial use of a trained model's *outputs*, so this is likely fine for distribution,
+  but it is **genuinely ambiguous**. Any Manga109-derived replacement model inherits the same
+  caveat; a model trained only on permissively-licensed (e.g. CC-BY) panel datasets would remove it.
 
 ## Brand assets
 

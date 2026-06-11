@@ -149,7 +149,9 @@ struct ReaderView: View {
                         bitmapH: Int32(image.cgImage?.height ?? 1),
                         containerW: Float(geo.size.width),
                         containerH: Float(geo.size.height),
-                        fill: 0.98
+                        // Leave breathing room around each panel instead of filling edge-to-edge —
+                        // edge-to-edge felt like over-zooming on manga's small, dense panels.
+                        fill: 0.86
                     )
                     Image(uiImage: image)
                         .resizable()

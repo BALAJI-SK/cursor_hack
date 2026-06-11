@@ -30,6 +30,7 @@ struct ReaderView: View {
     @State private var rightToLeft = false
     @State private var showChrome = true
     @State private var loadToken = 0
+    @State private var debugBoxes = false   // overlay all detected panels on the whole page
     // Manual zoom/pan layered on top of the panel-framing camera (pinch to zoom, drag to pan).
     @State private var zoom: CGFloat = 1
     @State private var steadyZoom: CGFloat = 1
@@ -38,7 +39,8 @@ struct ReaderView: View {
 
     private var title: String { comicURL.deletingPathExtension().lastPathComponent.uppercased() }
     private var camera: Panel {
-        (step >= 0 && step < regions.count) ? regions[step] : Panel.companion.FULL_PAGE
+        if debugBoxes { return Panel.companion.FULL_PAGE } // show the full page to overlay all boxes
+        return (step >= 0 && step < regions.count) ? regions[step] : Panel.companion.FULL_PAGE
     }
 
     var body: some View {
@@ -169,6 +171,29 @@ struct ReaderView: View {
             .frame(width: geo.size.width, height: geo.size.height)
             .clipped()
             .overlay { if showChrome { Reticle(color: Chika.cream, inset: 6) } }
+            .overlay {
+                // Debug: draw every planned panel box (in reading order) over the whole page, so a
+                // screenshot can be compared to Android to confirm detection parity.
+                if debugBoxes, let image {
+                    Canvas { ctx, sz in
+                        let d = CameraTransformKt.computePageDraw(
+                            camera: Panel.companion.FULL_PAGE,
+                            bitmapW: Int32(image.cgImage?.width ?? 1),
+                            bitmapH: Int32(image.cgImage?.height ?? 1),
+                            containerW: Float(sz.width), containerH: Float(sz.height), fill: 0.98)
+                        let ox = CGFloat(d.left), oy = CGFloat(d.top)
+                        let sw = CGFloat(d.scaledWidth), sh = CGFloat(d.scaledHeight)
+                        for (i, r) in regions.enumerated() {
+                            let rect = CGRect(x: ox + CGFloat(r.left) * sw, y: oy + CGFloat(r.top) * sh,
+                                              width: CGFloat(r.width) * sw, height: CGFloat(r.height) * sh)
+                            ctx.stroke(Path(rect), with: .color(.red), lineWidth: 2)
+                            ctx.draw(Text("\(i + 1)").font(.system(size: 15, weight: .black)).foregroundColor(.yellow),
+                                     at: CGPoint(x: rect.minX + 12, y: rect.minY + 12))
+                        }
+                    }
+                    .allowsHitTesting(false)
+                }
+            }
             .contentShape(Rectangle())
             // Pinch to zoom; drag to pan when zoomed, or swipe to turn the page when not.
             .gesture(
@@ -231,6 +256,14 @@ struct ReaderView: View {
                 }
             }
             Spacer()
+            Button { debugBoxes.toggle() } label: {
+                Image(systemName: debugBoxes ? "square.dashed.inset.filled" : "square.dashed")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(debugBoxes ? Chika.ochre : Chika.cream)
+                    .frame(width: 34, height: 34)
+                    .background(Chika.inkSoft)
+                    .clipShape(RoundedCornerShape(cornerRadius: 3))
+            }
             Button(rightToLeft ? "RTL" : "LTR") { rightToLeft.toggle(); redetect() }
                 .font(.archivo(12)).foregroundColor(Chika.ink)
                 .padding(.horizontal, 10).padding(.vertical, 5)

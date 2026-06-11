@@ -92,17 +92,16 @@ final class LiteRTPanelDetector {
         }
         guard ok else { return nil }
 
-        // Grayscale the input (BT.601 luma, replicated to 3 channels): the model was trained on
-        // black-and-white manga, so feeding color comics as luma matches its training distribution
-        // and improves detection on color/Western pages. Identical formula on Android for parity.
+        // Feed color RGB normalized 0–1, exactly matching Android's buildInput, so both platforms
+        // hand the model identical pixels (input preprocessing is the only non-shared part of the
+        // detection path, so it must match for detection parity).
         var floats = [Float](repeating: 0, count: size * size * 3)
         var di = 0
         var px = 0
         while px < rgba.count {
-            let lum = (0.299 * Float(rgba[px]) + 0.587 * Float(rgba[px + 1]) + 0.114 * Float(rgba[px + 2])) / 255.0
-            floats[di] = lum
-            floats[di + 1] = lum
-            floats[di + 2] = lum
+            floats[di] = Float(rgba[px]) / 255.0
+            floats[di + 1] = Float(rgba[px + 1]) / 255.0
+            floats[di + 2] = Float(rgba[px + 2]) / 255.0
             di += 3
             px += 4
         }

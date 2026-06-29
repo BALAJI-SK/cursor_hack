@@ -13,7 +13,10 @@ object PanelPipeline {
         pageH: Int,
         rightToLeft: Boolean,
     ): List<Panel> {
-        val ordered = PanelOrdering.order(panels, rightToLeft)
+        // Add any large, roughly-rectangular region the model left uncovered as a panel, so missed
+        // panels get numbered too — then order and plan as usual.
+        val filled = PanelGapFiller.fill(panels)
+        val ordered = PanelOrdering.order(filled, rightToLeft)
         return PanelPlanner.plan(ordered, bubbles, pageW, pageH, rightToLeft)
     }
 }

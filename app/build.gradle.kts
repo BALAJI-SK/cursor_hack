@@ -18,7 +18,7 @@ android {
         // versionCode is derived deterministically from it (MAJOR*10000 + MINOR*100 + PATCH) so it
         // is reproducible and monotonically increasing across all channels (Play, F-Droid, sideload)
         // — F-Droid builds from source and requires a stable, increasing versionCode.
-        val appVersionName = System.getenv("VERSION_NAME") ?: "0.1.1"
+        val appVersionName = System.getenv("VERSION_NAME") ?: "0.1.2"
         versionName = appVersionName
         versionCode = appVersionName.split('.').map { it.toIntOrNull() ?: 0 }.let { p ->
             (p.getOrElse(0) { 0 } * 10000) + (p.getOrElse(1) { 0 } * 100) + p.getOrElse(2) { 0 }

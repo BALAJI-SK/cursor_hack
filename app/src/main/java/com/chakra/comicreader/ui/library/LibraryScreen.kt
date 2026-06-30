@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chakra.comicreader.data.db.ComicEntity
-import com.chakra.comicreader.ui.brand.ChikaMark
 import com.chakra.comicreader.ui.brand.ChikaWordmark
 import com.chakra.comicreader.ui.brand.OchreBadge
 import com.chakra.comicreader.ui.brand.StarburstShape

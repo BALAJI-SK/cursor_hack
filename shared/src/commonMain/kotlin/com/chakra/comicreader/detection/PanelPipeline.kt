@@ -17,6 +17,10 @@ object PanelPipeline {
         // panels get numbered too — then order and plan as usual.
         val filled = PanelGapFiller.fill(panels)
         val ordered = PanelOrdering.order(filled, rightToLeft)
-        return PanelPlanner.plan(ordered, bubbles, pageW, pageH, rightToLeft)
+        val planned = PanelPlanner.plan(ordered, bubbles, pageW, pageH, rightToLeft)
+        if (planned.size >= 2) return planned
+        // The model found nothing usable (or it collapsed to a single region): rather than show the
+        // page as one panel, treat the whole page as a panel and let the ratio splitter break it up.
+        return PanelPlanner.plan(listOf(Panel.FULL_PAGE), bubbles, pageW, pageH, rightToLeft)
     }
 }

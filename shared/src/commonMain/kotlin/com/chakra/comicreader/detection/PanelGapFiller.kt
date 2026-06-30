@@ -16,9 +16,9 @@ object PanelGapFiller {
 
     data class Config(
         /** An empty rectangle must cover at least this fraction of the page to become a panel. */
-        val minAreaFraction: Float = 0.05f,
+        val minAreaFraction: Float = 0.07f,
         /** ...and each side must be at least this fraction of the page (rejects thin margin strips). */
-        val minSideFraction: Float = 0.10f,
+        val minSideFraction: Float = 0.12f,
         /** Sampling resolution (cells per axis). */
         val grid: Int = 64,
         /** Safety cap on how many missed panels to recover from one page. */

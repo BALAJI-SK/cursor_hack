@@ -2,7 +2,7 @@ package com.chakra.comicreader.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-/** Chika · Chitra Katha brand palette (ported verbatim from chika-brand.css). */
+/** Chika · Chitra Katha brand palette. */
 val Ink = Color(0xFF17100E)
 val InkSoft = Color(0xFF2A201C)
 val Crimson = Color(0xFFD11F2D)

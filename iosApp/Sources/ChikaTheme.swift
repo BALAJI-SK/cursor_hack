@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Chika · Chitra Katha brand palette — ported verbatim from the Android theme (chika-brand.css).
+/// Chika · Chitra Katha brand palette — kept in sync with the Android theme (Color.kt).
 enum Chika {
     static let ink = Color(hex: 0x17100E)
     static let inkSoft = Color(hex: 0x2A201C)

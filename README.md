@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="design_handoff_chika_reader/assets/logo-lockup.png" width="420" alt="Chika · Chitra Katha">
+  <img src="docs/logo-lockup.png" width="420" alt="Chika · Chitra Katha">
 </p>
 
 <p align="center">
@@ -15,9 +15,9 @@
 </p>
 
 <p align="center">
-  <img src="design_handoff_chika_reader/assets/screens/library.png" width="280" alt="Library">
+  <img src="docs/screens/library.png" width="280" alt="Library">
   &nbsp;&nbsp;
-  <img src="design_handoff_chika_reader/assets/screens/reader.png" width="280" alt="Reader">
+  <img src="docs/screens/reader.png" width="280" alt="Reader">
 </p>
 
 ---

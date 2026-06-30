@@ -137,7 +137,12 @@ class YoloPanelDecoder(
         val kept = ArrayList<FloatArray>()
         for (box in sorted) {
             val redundant = kept.any { iou(it, box) > nmsIoU || containedFraction(box, it) > containmentThreshold }
-            if (!redundant) kept.add(box)
+            if (redundant) continue
+            // A larger box can arrive after a smaller one it engulfs (the smaller scored higher), so
+            // also evict any already-kept boxes now nested inside this one — we never keep a panel
+            // inside another panel, whatever order they're processed in.
+            kept.removeAll { containedFraction(it, box) > containmentThreshold }
+            kept.add(box)
         }
         return kept
     }

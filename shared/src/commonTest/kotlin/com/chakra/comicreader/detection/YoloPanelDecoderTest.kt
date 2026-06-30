@@ -63,6 +63,30 @@ class YoloPanelDecoderTest {
     }
 
     @Test
+    fun largePanelEvictsHigherScoringNestedPanel() {
+        // Page-57 case: a small panel scores higher than the huge panel that engulfs it. Suppression
+        // must still drop the nested one (the larger box arrives second) — never keep panel-in-panel.
+        val lb = Letterbox.fit(640, 640, 640)
+        val (raw, shape) = endToEnd(listOf(
+            floatArrayOf(20f, 8f, 160f, 150f, 0.95f, 0f), // small, higher score, fully nested
+            floatArrayOf(0f, 6f, 640f, 536f, 0.90f, 0f),  // huge, lower score, engulfs the small one
+        ))
+        assertEquals(1, decoder.decode(raw, shape, lb, 640, 640).panels.size)
+    }
+
+    @Test
+    fun partiallyOverlappingPanelsAreBothKept() {
+        // A panel only ~⅓ inside a larger one (below the containment threshold) is a real neighbour
+        // and must survive — guards the eviction above from being too aggressive.
+        val lb = Letterbox.fit(640, 640, 640)
+        val (raw, shape) = endToEnd(listOf(
+            floatArrayOf(0f, 6f, 640f, 536f, 0.90f, 0f),     // large upper region
+            floatArrayOf(309f, 493f, 566f, 624f, 0.85f, 0f), // ~33% inside it → kept
+        ))
+        assertEquals(2, decoder.decode(raw, shape, lb, 640, 640).panels.size)
+    }
+
+    @Test
     fun normalizedCoordsAreScaledToInput() {
         val lb = Letterbox.fit(640, 640, 640)
         // All coords ≤ 1 → decoder multiplies by inputSize.

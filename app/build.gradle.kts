@@ -15,12 +15,15 @@ android {
         minSdk = 26
         targetSdk = 36
         // versionName comes from the git tag in CI (VERSION_NAME), else this default.
-        // versionCode is derived deterministically from it (MAJOR*10000 + MINOR*100 + PATCH) so it
-        // is reproducible and monotonically increasing across all channels (Play, F-Droid, sideload)
-        // — F-Droid builds from source and requires a stable, increasing versionCode.
-        val appVersionName = System.getenv("VERSION_NAME") ?: "0.2.0"
+        // versionCode is derived deterministically from MAJOR*10000 + MINOR*100 + PATCH so it is
+        // reproducible and monotonically increasing across all channels (Play, F-Droid, sideload)
+        // — F-Droid builds from source and requires a stable, increasing versionCode. A pre-release
+        // suffix is ignored per component (e.g. "0.2.1-beta" → 0.2.1 → 20100... → 201).
+        val appVersionName = System.getenv("VERSION_NAME") ?: "0.2.1"
         versionName = appVersionName
-        versionCode = appVersionName.split('.').map { it.toIntOrNull() ?: 0 }.let { p ->
+        versionCode = appVersionName.split('.').map { part ->
+            part.takeWhile { it.isDigit() }.toIntOrNull() ?: 0
+        }.let { p ->
             (p.getOrElse(0) { 0 } * 10000) + (p.getOrElse(1) { 0 } * 100) + p.getOrElse(2) { 0 }
         }
 

@@ -46,10 +46,15 @@ object PanelPlanner {
         val broadHeightFraction: Float = 0.55f,
         /** Don't split a full-width panel thinner than this (avoids slicing thin banners). */
         val minDivideHeightFraction: Float = 0.10f,
-        /** Image aspect (w/h) ≥ this ⇒ treat the page image as a double-page spread. */
-        val spreadAspectMin: Float = 1.4f,
+        /** Image aspect (w/h) ≥ this ⇒ treat the page image as a double-page spread. Two portrait
+         *  pages side by side give ≈1.3 (2× a ~0.65 single-page aspect), so the cutoff sits below
+         *  that — anything clearly wider than tall is a spread. */
+        val spreadAspectMin: Float = 1.15f,
         /** On a spread, a panel this wide (fraction of the image) is treated as spanning both pages. */
         val crossPageWidthFraction: Float = 0.85f,
+        /** On a spread, a panel at least this wide (≈ one page-half) is "full width of its own page",
+         *  so a big per-page panel on a wide spread is broken into more parts instead of left whole. */
+        val spreadPageWidthFraction: Float = 0.42f,
     )
 
     private data class Region(val panel: Panel, val merged: Boolean)
@@ -116,8 +121,9 @@ object PanelPlanner {
 
     /** Whether a (non-merged) panel should be split, and which rule applies, is decided here. */
     private fun shouldDivide(p: Panel, pageAspect: Float, c: Config): Boolean {
-        if (isSpread(pageAspect, c) && isCrossPage(p, c)) return true
-        if (isFullWidth(p, c) && p.height >= c.minDivideHeightFraction) return true
+        val spread = isSpread(pageAspect, c)
+        if (spread && isCrossPage(p, c)) return true
+        if (isFullWidth(p, c, spread) && p.height >= c.minDivideHeightFraction) return true
         return isBig(p, c) && !isSquare(p, pageAspect, c)
     }
 
@@ -128,21 +134,43 @@ object PanelPlanner {
         rightToLeft: Boolean,
         config: Config,
     ): List<Panel> {
-        // Double-page spread: a panel spanning both pages is cut at the page seam (the panel's
-        // centre), then each half is split by the 2/4 breadth rule → up to 8 pieces.
+        // Double-page spread: the two pages are one merged image, so a panel spanning them is read
+        // row by row across the full width — a piece on the left page and one at the same height on
+        // the right page are consecutive, NOT "whole right page then whole left page". Split into a
+        // 4-column grid (≈2 columns per page), with a second row when it's also tall, emitted in
+        // reading order (top→bottom, each row left→right or right→left).
         if (isSpread(pageAspect, config) && isCrossPage(panel, config)) {
-            val seam = panel.centerX
-            val leftHalf = Panel(panel.left, panel.top, seam, panel.bottom)
-            val rightHalf = Panel(seam, panel.top, panel.right, panel.bottom)
-            val pagesInOrder = if (rightToLeft) listOf(rightHalf, leftHalf) else listOf(leftHalf, rightHalf)
-            return pagesInOrder.flatMap { splitByBreadth(it, bubbles, rightToLeft, config) }
+            val rows = if (panel.height >= config.broadHeightFraction) 2 else 1
+            return gridSplit(panel, cols = 4, rows = rows, rightToLeft)
         }
-        // A panel as wide as the page → 2 (just wide) or 4 (broad).
-        if (isFullWidth(panel, config)) {
+        // A panel as wide as the page (or, on a spread, as wide as one page) → 2 (just wide) or 4 (broad).
+        if (isFullWidth(panel, config, isSpread(pageAspect, config))) {
             return splitByBreadth(panel, bubbles, rightToLeft, config)
         }
         // Other big, elongated, non-square panels keep the classic single cut.
         return classicDivide(panel, bubbles, pageAspect, rightToLeft, config)
+    }
+
+    /**
+     * Splits [panel] into a [rows]×[cols] grid with even cuts, emitted row by row (top→bottom) and
+     * within each row in reading direction (left→right, or right→left for [rtl]). Used for a wide
+     * spread panel so the merged two pages read as one across the seam.
+     */
+    private fun gridSplit(panel: Panel, cols: Int, rows: Int, rtl: Boolean): List<Panel> {
+        val cw = panel.width / cols
+        val rh = panel.height / rows
+        val pieces = ArrayList<Panel>(rows * cols)
+        for (r in 0 until rows) {
+            val top = if (r == 0) panel.top else panel.top + r * rh
+            val bottom = if (r == rows - 1) panel.bottom else panel.top + (r + 1) * rh
+            val colOrder = if (rtl) (cols - 1 downTo 0) else (0 until cols)
+            for (c in colOrder) {
+                val left = if (c == 0) panel.left else panel.left + c * cw
+                val right = if (c == cols - 1) panel.right else panel.left + (c + 1) * cw
+                pieces += Panel(left, top, right, bottom)
+            }
+        }
+        return pieces
     }
 
     /** Full-width region → 4 pieces (2×2) if broad (tall too), else 2 pieces (side-by-side). */
@@ -234,7 +262,8 @@ object PanelPlanner {
 
     private fun isSmall(p: Panel, c: Config) = p.area < c.smallAreaFraction
     private fun isBig(p: Panel, c: Config) = p.area > c.bigAreaFraction
-    private fun isFullWidth(p: Panel, c: Config) = p.width >= c.fullWidthFraction
+    private fun isFullWidth(p: Panel, c: Config, spread: Boolean) =
+        p.width >= if (spread) c.spreadPageWidthFraction else c.fullWidthFraction
     private fun isSpread(pageAspect: Float, c: Config) = pageAspect >= c.spreadAspectMin
     private fun isCrossPage(p: Panel, c: Config) = p.width >= c.crossPageWidthFraction
 

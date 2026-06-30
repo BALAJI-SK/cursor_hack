@@ -134,32 +134,66 @@ class PanelPlannerTest {
     }
 
     @Test
-    fun doublePageBroadPanelSplitsIntoEight() {
-        // Landscape spread image (aspect 2200/1500 ≈ 1.47); a panel spanning both pages, broad.
+    fun doublePageBroadPanelReadsRowMajorAcrossBothPages() {
+        // Landscape spread (aspect ≈1.47), a panel spanning both pages, broad → 4 cols × 2 rows = 8,
+        // read as ONE image: the whole top row (across both pages) before the bottom row.
         val spread = Panel(0.0f, 0.10f, 1.0f, 0.85f)
         val r = PanelPlanner.plan(listOf(spread), emptyList(), 2200, 1500, false)
         assertEquals(8, r.size)
-        // first 4 belong to the left page, next 4 to the right page
-        assertTrue(r.take(4).all { it.right <= 0.5f + 1e-4f }, "first 4 should be the left page")
-        assertTrue(r.drop(4).all { it.left >= 0.5f - 1e-4f }, "last 4 should be the right page")
+        val mid = (0.10f + 0.85f) / 2f
+        assertTrue(r.take(4).all { it.bottom <= mid + 1e-3f }, "first 4 = top row (across both pages)")
+        assertTrue(r.drop(4).all { it.top >= mid - 1e-3f }, "last 4 = bottom row")
+        // The top row crosses the seam left→right (a left-page piece, then a right-page piece).
+        assertTrue(r[0].left < r[1].left && r[1].left < r[2].left && r[2].left < r[3].left)
+        assertTrue(r[0].right <= 0.5f + 1e-3f && r[3].left >= 0.5f - 1e-3f, "row spans both pages")
     }
 
     @Test
-    fun doublePageShortPanelSplitsIntoFour() {
-        // Spread, but the cross-page panel is short → each half halves → 2 + 2 = 4.
+    fun doublePageShortPanelSplitsIntoFourAcross() {
+        // Short cross-page panel → a single row of 4 across the full width, left→right.
         val spread = Panel(0.0f, 0.30f, 1.0f, 0.60f)
         val r = PanelPlanner.plan(listOf(spread), emptyList(), 2200, 1500, false)
         assertEquals(4, r.size)
-        assertTrue(r.take(2).all { it.right <= 0.5f + 1e-4f })
-        assertTrue(r.drop(2).all { it.left >= 0.5f - 1e-4f })
+        assertTrue(r[0].left < r[1].left && r[1].left < r[2].left && r[2].left < r[3].left, "left→right")
     }
 
     @Test
-    fun doublePageRightToLeftEmitsRightPageFirst() {
+    fun doublePageRightToLeftReadsRightmostFirst() {
         val spread = Panel(0.0f, 0.30f, 1.0f, 0.60f)
         val r = PanelPlanner.plan(listOf(spread), emptyList(), 2200, 1500, true)
         assertEquals(4, r.size)
-        assertTrue(r.take(2).all { it.left >= 0.5f - 1e-4f }, "RTL: right page first")
+        assertTrue(r[0].left > r[1].left && r[1].left > r[2].left, "right→left across the spread")
+        assertTrue(r[0].right >= 1.0f - 1e-3f, "starts at the far right")
+    }
+
+    @Test
+    fun spreadPerPagePanelsAreEachBrokenUp() {
+        // Spread (aspect ≈1.47) with one big panel per page. Neither spans both pages, but each fills
+        // its own page → each split into 4 → 8 total.
+        val leftPage = Panel(0.02f, 0.10f, 0.48f, 0.90f)
+        val rightPage = Panel(0.52f, 0.10f, 0.98f, 0.90f)
+        val r = PanelPlanner.plan(listOf(leftPage, rightPage), emptyList(), 2200, 1500, false)
+        assertEquals(8, r.size)
+    }
+
+    @Test
+    fun modestlyWideSpreadIsStillTreatedAsSpread() {
+        // Two portrait pages side by side give aspect ≈1.3 (below the old 1.4 cutoff) → still a spread:
+        // 4 cols × 2 rows = 8, read row-major (top row across both pages first).
+        val spread = Panel(0.0f, 0.0f, 1.0f, 1.0f)
+        val r = PanelPlanner.plan(listOf(spread), emptyList(), 3974, 3056, false)
+        assertEquals(8, r.size)
+        assertTrue(r.take(4).all { it.bottom <= 0.5f + 1e-3f }, "top row first")
+        assertTrue(r.drop(4).all { it.top >= 0.5f - 1e-3f }, "bottom row second")
+    }
+
+    @Test
+    fun perPageWidthRuleAppliesOnlyToSpreads() {
+        // A half-page-wide, short panel: on a portrait page it's neither full-width nor big → kept
+        // whole; on a landscape spread it fills one page → split into 2.
+        val p = Panel(0.04f, 0.35f, 0.50f, 0.65f) // width 0.46, height 0.30
+        assertEquals(1, PanelPlanner.plan(listOf(p), emptyList(), 1000, 1500, false).size) // portrait
+        assertEquals(2, PanelPlanner.plan(listOf(p), emptyList(), 2200, 1500, false).size) // spread
     }
 
     private fun assertEquals(expected: Float, actual: Float, absoluteTolerance: Float, message: String? = null) {

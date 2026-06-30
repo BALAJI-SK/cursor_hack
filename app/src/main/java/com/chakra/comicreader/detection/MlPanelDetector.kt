@@ -57,9 +57,23 @@ class MlPanelDetector private constructor(
         val planned = PanelPipeline.zoomRegions(
             result.panels, result.bubbles, result.pageW, result.pageH, rightToLeft,
         )
+        val regions = if (planned.size < 2) listOf(Panel.FULL_PAGE) else planned
         Log.i(TAG, "panels=${result.panels.size} bubbles=${result.bubbles.size} planned=${planned.size}")
-        if (planned.size < 2) listOf(Panel.FULL_PAGE) else planned
+
+        // TEMP DEBUG (ordering investigation): dump coordinates of each stage to separate an
+        // ordering bug (wrong parent order) from a divide bug (wrong child order). Remove after.
+        Log.i(TAG, "DBG page=${result.pageW}x${result.pageH} rtl=$rightToLeft")
+        result.panels.forEachIndexed { i, p -> Log.i(TAG, "DBG DET $i ${fmt(p)}") }
+        val ordered = PanelOrdering.order(PanelGapFiller.fill(result.panels), rightToLeft)
+        ordered.forEachIndexed { i, p -> Log.i(TAG, "DBG ORD $i ${fmt(p)}") }
+        regions.forEachIndexed { i, p -> Log.i(TAG, "DBG FIN $i ${fmt(p)}") }
+
+        regions
     }
+
+    /** TEMP: compact panel coordinate formatter for the ordering investigation. */
+    private fun fmt(p: Panel): String =
+        "L=${"%.3f".format(p.left)} T=${"%.3f".format(p.top)} R=${"%.3f".format(p.right)} B=${"%.3f".format(p.bottom)}"
 
     /** ML detections for one page, normalized to [0,1]; page dimensions are in pixels. */
     private fun run(page: Bitmap): DetectResult {

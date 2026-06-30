@@ -19,6 +19,10 @@ object PanelOrdering {
      *  assigned cleanly to one side (handles slightly misaligned panels in the same row). */
     private const val STRADDLE_TOLERANCE = 0.25f
 
+    /** In the no-clean-cut fallback, panels whose tops are within this fraction of the page height
+     *  are treated as one row (so a vertically-staggered row still reads left→right). */
+    private const val ROW_BAND = 0.12f
+
     fun order(panels: List<Panel>, rightToLeft: Boolean = false): List<Panel> {
         if (panels.size <= 1) return panels
         return cut(panels, rightToLeft)
@@ -38,10 +42,19 @@ object PanelOrdering {
             else cut(left, rightToLeft) + cut(right, rightToLeft)
         }
 
-        // No clean cut (panels overlap both ways) → stable fallback by top then direction.
-        return panels.sortedWith(
-            if (rightToLeft) compareBy({ it.top }, { -it.left }) else compareBy({ it.top }, { it.left }),
-        )
+        // No clean cut (a big panel overlaps everything, so neither axis splits). Best effort: cluster
+        // into rows by top — tolerant of vertical stagger — then read rows top→bottom and within a row
+        // by reading direction. This keeps a staggered bottom row (e.g. a panel beside a shorter one)
+        // in left→right order instead of "whichever starts higher first".
+        val byTop = panels.sortedBy { it.top }
+        val rows = ArrayList<MutableList<Panel>>()
+        for (p in byTop) {
+            val row = rows.lastOrNull()
+            if (row != null && p.top - row.first().top <= ROW_BAND) row.add(p) else rows.add(mutableListOf(p))
+        }
+        return rows.flatMap { row ->
+            row.sortedWith(if (rightToLeft) compareByDescending { it.left } else compareBy { it.left })
+        }
     }
 
     /**

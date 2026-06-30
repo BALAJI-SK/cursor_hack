@@ -43,6 +43,17 @@ class PanelOrderingTest {
     }
 
     @Test
+    fun staggeredBottomRowUnderAnOverlappingPanelReadsLeftToRight() {
+        // Page-57 shape: a huge panel overlaps everything (no clean cut), with a bottom row whose two
+        // panels are vertically staggered. The bottom row must read left→right, not "higher-first".
+        val huge = Panel(0.0f, 0.01f, 1.0f, 0.84f)
+        val bottomRightHigher = Panel(0.48f, 0.77f, 0.89f, 0.98f) // starts higher
+        val bottomLeftLower = Panel(0.0f, 0.84f, 0.48f, 1.0f)     // starts lower, but is on the left
+        val ordered = PanelOrdering.order(listOf(bottomRightHigher, huge, bottomLeftLower))
+        assertEquals(listOf(huge, bottomLeftLower, bottomRightHigher), ordered)
+    }
+
+    @Test
     fun emptyAndSingleListsPassThrough() {
         assertEquals(emptyList(), PanelOrdering.order(emptyList()))
         assertEquals(listOf(topLeft), PanelOrdering.order(listOf(topLeft)))

@@ -76,10 +76,9 @@ Full texts: [`THIRD_PARTY_LICENSES/OFL-1.1-Anton.txt`](THIRD_PARTY_LICENSES/OFL-
 
 ## Brand assets
 
-The **Chika / Chitra Katha** name, logo, wordmark, the `CHIKA _ ink` icon, and the
-`design_handoff_chika_reader/` package are brand assets owned by the project owner (Chakra /
-Chalchitra Krida) and are **not** covered by the MPL-2.0 code license. Trademark/brand rights are
-reserved even where the surrounding source is open.
+The **Chika / Chitra Katha** name, logo, and wordmark are brand assets owned by the project owner
+(Chakra / Chalchitra Krida) and are **not** covered by the MPL-2.0 code license. Trademark/brand
+rights are reserved even where the surrounding source is open.
 
 ## Distribution notes
 

@@ -325,7 +325,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
         style={{ 
           position: 'absolute', top: '1.25rem', left: '1.25rem', right: '1.25rem',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0.6rem 1.25rem', zIndex: 10 
+          padding: '0.6rem 1.25rem', zIndex: 20 
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -537,7 +537,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
         style={{ 
           position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem',
           padding: '1rem 1.5rem', 
-          display: 'flex', alignItems: 'center', gap: '1.5rem', zIndex: 10 
+          display: 'flex', alignItems: 'center', gap: '1.5rem', zIndex: 20 
         }}
       >
         <input 

@@ -4,7 +4,7 @@ services:
     name: chika-backend
     env: docker
     dockerfilePath: server/Dockerfile
-    plan: free
+    plan: starter  # Starter plan supports persistent disk storage (uses your credits, ~$7/month)
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
@@ -19,7 +19,9 @@ services:
     env: static
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: frontend/dist
-    plan: free
     envVars:
       - key: VITE_API_URL
-        value: "https://chika-backend.onrender.com" # Auto-inject backend URL (replace with actual deployment domain if custom)
+        fromService:
+          name: chika-backend
+          type: web
+          property: url

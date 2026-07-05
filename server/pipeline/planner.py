@@ -15,8 +15,8 @@ class PanelPlanner:
         self.cut_central_max = 0.70
         self.full_width = 0.85
         self.broad_height = 0.55
-        self.min_divide_height = 0.10
-        self.spread_aspect_min = 1.15
+        self.min_divide_height = 0.40  # Increased from 0.10 to prevent dividing thin/normal horizontal panels
+        self.spread_aspect_min = 1.35   # Increased from 1.15 to prevent treating slightly wide single pages as double-page spreads
         self.cross_page_width = 0.85
         self.spread_page_width = 0.42
 

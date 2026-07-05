@@ -180,10 +180,10 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
       hi = containerSize.height;
     }
 
-    // Scale to fit the panel inside the container (with a 96% fill padding)
+    // Scale to fit the panel inside the container (with a 92% fill padding for breathing room)
     const scaleX = containerSize.width / (pw * wi);
     const scaleY = containerSize.height / (ph * hi);
-    const zoom = Math.min(scaleX, scaleY) * 0.96;
+    const zoom = Math.min(scaleX, scaleY) * 0.92;
 
     // Translation to align panel center to container center
     const tx = wi * (0.5 - cx);

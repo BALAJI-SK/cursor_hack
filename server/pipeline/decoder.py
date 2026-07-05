@@ -15,7 +15,11 @@ class YoloPanelDecoder:
         for i in range(raw.shape[0]):
             score = raw[i, 4]
             cls = int(raw[i, 5])
-            if score < self.confidence_threshold:
+            
+            # Lower threshold for panels to 0.15 since panel borders are often hand-drawn/borderless.
+            # Keep bubbles at default threshold since text bubbles are high-contrast and easy to detect.
+            thresh = 0.15 if cls == 0 else self.confidence_threshold
+            if score < thresh:
                 continue
             
             box = raw[i, 0:5] # x1, y1, x2, y2, score

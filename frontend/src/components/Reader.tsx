@@ -13,7 +13,7 @@ interface PanelRect {
 export default function Reader({ comicId, onBack }: { comicId: string; onBack: () => void }) {
   const [page, setPage] = useState(0);
   const [panels, setPanels] = useState<PanelRect[]>([]);
-  const [panelIndex, setPanelIndex] = useState(-1); // -1 means whole page
+  const [slot, setSlot] = useState(0); // 0 = intro, 1..len = panels, len + 1 = outro
   const [totalPages, setTotalPages] = useState(1);
   const [rtl, setRtl] = useState(false);
   const [showWhole, setShowWhole] = useState(false);
@@ -56,7 +56,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
         if (active) {
           setTotalPages(active.totalPages);
           setPage(active.progressPage);
-          setPanelIndex(active.progressPanel);
+          setSlot(active.progressPanel);
         }
       } catch (err) {
         console.error("Error fetching progress", err);
@@ -74,6 +74,12 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
         if (res.ok) {
           const pData = await res.json();
           setPanels(pData);
+          setSlot((currentSlot) => {
+            if (currentSlot === -1) {
+              return pData.length + 1; // Outro slot
+            }
+            return currentSlot;
+          });
         }
       } catch (err) {
         console.error("Error loading panels", err);
@@ -86,12 +92,12 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
   }, [comicId, page, rtl]);
 
   // Save progress to DB
-  const saveProgress = async (p: number, pan: number) => {
+  const saveProgress = async (p: number, s: number) => {
     try {
       await fetch(`${API_URL}/api/comics/${comicId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ page: p, panel: pan })
+        body: JSON.stringify({ page: p, panel: s })
       });
     } catch (err) {
       console.error("Failed to save progress", err);
@@ -102,21 +108,21 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
     if (showWhole) {
       if (page < totalPages - 1) {
         setPage(page + 1);
-        setPanelIndex(-1);
-        saveProgress(page + 1, -1);
+        setSlot(0);
+        saveProgress(page + 1, 0);
       }
       return;
     }
 
-    if (panelIndex < panels.length - 1) {
-      const nextIndex = panelIndex + 1;
-      setPanelIndex(nextIndex);
-      saveProgress(page, nextIndex);
+    const lastSlot = panels.length + 1;
+    if (slot < lastSlot) {
+      setSlot(slot + 1);
+      saveProgress(page, slot + 1);
     } else {
       if (page < totalPages - 1) {
         setPage(page + 1);
-        setPanelIndex(-1);
-        saveProgress(page + 1, -1);
+        setSlot(0);
+        saveProgress(page + 1, 0);
       }
     }
   };
@@ -125,21 +131,19 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
     if (showWhole) {
       if (page > 0) {
         setPage(page - 1);
-        setPanelIndex(-1);
-        saveProgress(page - 1, -1);
+        setSlot(0);
+        saveProgress(page - 1, 0);
       }
       return;
     }
 
-    if (panelIndex > -1) {
-      const prevIndex = panelIndex - 1;
-      setPanelIndex(prevIndex);
-      saveProgress(page, prevIndex);
+    if (slot > 0) {
+      setSlot(slot - 1);
+      saveProgress(page, slot - 1);
     } else {
       if (page > 0) {
         setPage(page - 1);
-        // Go to full page of previous page first, or we can fetch previous panels and set to last index
-        setPanelIndex(-1);
+        setSlot(-1); // Sentinel for OUTRO of previous page
         saveProgress(page - 1, -1);
       }
     }
@@ -147,14 +151,14 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
 
   // Calculate viewport transformation
   const getTransform = () => {
-    if (panelIndex === -1 || showWhole || panels.length === 0 || containerSize.width === 0 || imageSize.width === 0) {
+    if (slot === 0 || slot === panels.length + 1 || showWhole || panels.length === 0 || containerSize.width === 0 || imageSize.width === 0) {
       return {
         transform: 'translate(0px, 0px) scale(1)',
         transformOrigin: 'center center'
       };
     }
     
-    const p = panels[panelIndex];
+    const p = panels[slot - 1];
     const pw = p.right - p.left;
     const ph = p.bottom - p.top;
     const cx = (p.left + p.right) / 2;
@@ -231,7 +235,8 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
           <button 
             onClick={() => {
               setShowWhole(!showWhole);
-              setPanelIndex(-1);
+              setSlot(0);
+              saveProgress(page, 0);
             }} 
             className="retro-button" 
             style={{ 
@@ -296,13 +301,13 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
             Running ML Panel Detection...
           </div>
         )}
-        {panels.length > 0 && !showWhole && (
+        {panels.length > 0 && !showWhole && slot > 0 && slot <= panels.length && (
           <div style={{
             position: 'absolute', bottom: '15px', right: '15px', background: 'rgba(0,0,0,0.85)',
             border: '2px solid var(--border-ink)', padding: '0.4rem 0.8rem', borderRadius: '4px',
             fontSize: '0.85rem', zIndex: 20, pointerEvents: 'none'
           }}>
-            Panel {panelIndex + 2} of {panels.length + 1}
+            Panel {slot} of {panels.length}
           </div>
         )}
       </div>
@@ -318,8 +323,10 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
           max={totalPages - 1} 
           value={page}
           onChange={(e) => {
-            setPage(parseInt(e.target.value));
-            setPanelIndex(-1);
+            const newPage = parseInt(e.target.value);
+            setPage(newPage);
+            setSlot(0);
+            saveProgress(newPage, 0);
           }}
           style={{ 
             flexGrow: 1, 

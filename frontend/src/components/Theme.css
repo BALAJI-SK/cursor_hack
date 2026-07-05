@@ -1,9 +1,10 @@
 :root {
-  --bg-cream: #f4edd8;
-  --text-ink: #1e1e1e;
+  --bg-cream: #f5eedc;
+  --text-ink: #181818;
   --crimson: #c82333;
-  --ochre: #d39e00;
-  --border-ink: #1e1e1e;
+  --ochre: #d99f0f;
+  --border-ink: #181818;
+  --shadow-color: rgba(24, 24, 24, 0.85);
 }
 
 body {
@@ -11,9 +12,9 @@ body {
   font-family: 'Archivo', sans-serif;
   background-color: var(--bg-cream);
   color: var(--text-ink);
-  /* Retro newsprint halftone-like pattern */
-  background-image: radial-gradient(var(--text-ink) 0.5px, transparent 0.5px);
-  background-size: 8px 8px;
+  background-image: radial-gradient(var(--text-ink) 0.6px, transparent 0.6px);
+  background-size: 10px 10px;
+  background-blend-mode: multiply;
 }
 
 .title-font {
@@ -27,6 +28,16 @@ body {
   border: 4px solid var(--border-ink);
   box-shadow: 6px 6px 0px var(--border-ink);
   border-radius: 4px;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Hover effect simulating picking up a physical comic */
+.retro-card-hover {
+  cursor: pointer;
+}
+.retro-card-hover:hover {
+  transform: translateY(-8px) rotate(-1.5deg);
+  box-shadow: 12px 12px 0px var(--border-ink);
 }
 
 .retro-button {
@@ -40,7 +51,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.1s ease;
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .retro-button:hover {
@@ -51,4 +62,89 @@ body {
 .retro-button:active {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0px var(--border-ink);
+}
+
+/* Glassmorphism float controls for distracted-free reading */
+.glass-controls {
+  background: rgba(18, 18, 18, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 3px solid var(--border-ink);
+  box-shadow: 5px 5px 0px var(--border-ink);
+  border-radius: 8px;
+}
+
+/* Pulsing animated border for dropzones */
+.pulse-border {
+  border: 4px dashed var(--border-ink);
+  animation: border-pulse 2s infinite ease-in-out;
+}
+
+@keyframes border-pulse {
+  0%, 100% {
+    border-color: var(--border-ink);
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    border-color: var(--crimson);
+    background-color: rgba(200, 35, 51, 0.05);
+  }
+}
+
+/* Custom retro slider styling */
+.retro-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-cream);
+  border: 3px solid var(--border-ink);
+  border-radius: 4px;
+  height: 14px;
+  outline: none;
+}
+
+.retro-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--border-ink);
+  background: var(--crimson);
+  cursor: pointer;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0px var(--border-ink);
+  transition: transform 0.1s ease;
+}
+
+.retro-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  background: var(--ochre);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-cream);
+  border-left: 3px solid var(--border-ink);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ochre);
+  border: 3px solid var(--border-ink);
+  box-shadow: 2px 2px 0px var(--border-ink);
+}
+
+/* Pulp Paper texture layer */
+.paper-texture {
+  position: relative;
+}
+.paper-texture::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.08) 0.5px, 
+    transparent 0.5px
+  );
+  pointer-events: none;
 }

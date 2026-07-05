@@ -196,23 +196,37 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
   };
 
   return (
-    <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', color: 'white', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ 
+      height: '100vh', 
+      background: '#121212', 
+      backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 0.8px, transparent 0.8px)',
+      backgroundSize: '12px 12px',
+      display: 'flex', 
+      flexDirection: 'column', 
+      color: 'white', 
+      position: 'relative', 
+      overflow: 'hidden' 
+    }}>
       
       {/* Reader Header */}
-      <div style={{ 
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0.75rem 1.5rem', background: '#121212', borderBottom: '3px solid var(--border-ink)', zIndex: 10 
-      }}>
+      <div 
+        className="glass-controls"
+        style={{ 
+          position: 'absolute', top: '1.25rem', left: '1.25rem', right: '1.25rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0.6rem 1.25rem', zIndex: 10 
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button 
             onClick={onBack} 
             className="retro-button" 
-            style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-cream)', color: 'var(--text-ink)', boxShadow: '2px 2px 0px var(--border-ink)', border: '2px solid var(--border-ink)' }}
+            style={{ padding: '0.35rem 0.75rem', background: 'var(--bg-cream)', color: 'var(--text-ink)', boxShadow: '2px 2px 0px var(--border-ink)', border: '2px solid var(--border-ink)' }}
           >
             <ArrowLeft size={16} />
             Library
           </button>
-          <span className="title-font" style={{ fontSize: '1.2rem', color: 'var(--bg-cream)' }}>
+          <span className="title-font" style={{ fontSize: '1.1rem', color: 'var(--bg-cream)', letterSpacing: '1px' }}>
             PAGE {page + 1} OF {totalPages}
           </span>
         </div>
@@ -222,7 +236,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
             onClick={() => setRtl(!rtl)} 
             className="retro-button" 
             style={{ 
-              padding: '0.4rem 0.8rem', 
+              padding: '0.35rem 0.75rem', 
               background: rtl ? 'var(--ochre)' : 'var(--bg-cream)', 
               color: 'var(--text-ink)', 
               boxShadow: '2px 2px 0px var(--border-ink)', 
@@ -240,7 +254,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
             }} 
             className="retro-button" 
             style={{ 
-              padding: '0.4rem 0.8rem', 
+              padding: '0.35rem 0.75rem', 
               background: showWhole ? 'var(--crimson)' : 'var(--bg-cream)', 
               color: showWhole ? 'white' : 'var(--text-ink)', 
               boxShadow: '2px 2px 0px var(--border-ink)', 
@@ -275,7 +289,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
 
         {/* Viewport Frame with Zoom Math */}
         <div style={{
-          width: '90vw', height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
           overflow: 'hidden'
         }}>
           <img 
@@ -283,9 +297,10 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
             alt={`Page ${page + 1}`}
             onLoad={handleImageLoad}
             style={{ 
-              maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto',
+              maxWidth: '92%', maxHeight: '92%', width: 'auto', height: 'auto',
               border: '4px solid var(--border-ink)', background: 'white',
-              transition: 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              boxShadow: '10px 10px 0px rgba(0,0,0,0.5)',
+              transition: 'transform 0.45s cubic-bezier(0.19, 1, 0.22, 1), transform-origin 0.45s cubic-bezier(0.19, 1, 0.22, 1)',
               ...getTransform()
             }}
           />
@@ -293,30 +308,40 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
 
         {/* Indicator details for debugging/checking panels count */}
         {loadingPanels && (
-          <div style={{
-            position: 'absolute', bottom: '15px', left: '15px', background: 'var(--ochre)',
-            color: 'black', border: '2px solid var(--border-ink)', padding: '0.4rem 0.8rem', borderRadius: '4px',
-            fontSize: '0.85rem', zIndex: 20, fontWeight: 'bold', pointerEvents: 'none'
-          }}>
+          <div 
+            className="title-font"
+            style={{
+              position: 'absolute', bottom: '6.5rem', left: '2rem', background: 'var(--ochre)',
+              color: 'black', border: '3px solid var(--border-ink)', padding: '0.5rem 1rem', borderRadius: '4px',
+              boxShadow: '3px 3px 0px var(--border-ink)', fontSize: '0.9rem', fontWeight: 800, zIndex: 20, pointerEvents: 'none'
+            }}
+          >
             Running ML Panel Detection...
           </div>
         )}
         {panels.length > 0 && !showWhole && slot > 0 && slot <= panels.length && (
-          <div style={{
-            position: 'absolute', bottom: '15px', right: '15px', background: 'rgba(0,0,0,0.85)',
-            border: '2px solid var(--border-ink)', padding: '0.4rem 0.8rem', borderRadius: '4px',
-            fontSize: '0.85rem', zIndex: 20, pointerEvents: 'none'
-          }}>
+          <div 
+            className="title-font"
+            style={{
+              position: 'absolute', bottom: '6.5rem', right: '2rem', background: 'var(--crimson)',
+              color: 'white', border: '3px solid var(--border-ink)', padding: '0.5rem 1rem', borderRadius: '4px',
+              boxShadow: '3px 3px 0px var(--border-ink)', fontSize: '0.9rem', fontWeight: 800, zIndex: 20, pointerEvents: 'none'
+            }}
+          >
             Panel {slot} of {panels.length}
           </div>
         )}
       </div>
 
       {/* Page Scrubber */}
-      <div style={{ 
-        padding: '1.25rem 2rem', background: '#121212', borderTop: '3px solid var(--border-ink)', 
-        display: 'flex', alignItems: 'center', gap: '1.5rem', zIndex: 10 
-      }}>
+      <div 
+        className="glass-controls"
+        style={{ 
+          position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem',
+          padding: '1rem 1.5rem', 
+          display: 'flex', alignItems: 'center', gap: '1.5rem', zIndex: 10 
+        }}
+      >
         <input 
           type="range" 
           min="0" 
@@ -328,15 +353,12 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
             setSlot(0);
             saveProgress(newPage, 0);
           }}
+          className="retro-slider"
           style={{ 
-            flexGrow: 1, 
-            accentColor: 'var(--crimson)', 
-            height: '8px', 
-            borderRadius: '4px', 
-            cursor: 'pointer' 
+            flexGrow: 1
           }}
         />
-        <span className="title-font" style={{ fontSize: '1.1rem', minWidth: '60px', textAlign: 'right' }}>
+        <span className="title-font" style={{ fontSize: '1.1rem', minWidth: '60px', textAlign: 'right', color: 'var(--bg-cream)' }}>
           {page + 1} / {totalPages}
         </span>
       </div>

@@ -90,10 +90,32 @@ export default function Library({ onSelectComic }: { onSelectComic: (id: string)
       {uploading && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(30,30,30,0.7)', color: 'white', display: 'flex',
+          background: 'rgba(24, 24, 24, 0.9)', color: 'var(--bg-cream)', display: 'flex',
           flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 100
         }}>
-          <h1 className="title-font" style={{ fontSize: '2.5rem' }}>Extracting & Indexing...</h1>
+          <div className="retro-border" style={{
+            background: 'white', padding: '2.5rem', display: 'flex',
+            flexDirection: 'column', alignItems: 'center', gap: '1.5rem',
+            textAlign: 'center', maxWidth: '400px'
+          }}>
+            <div className="title-font" style={{
+              fontSize: '2rem', color: 'var(--crimson)',
+              letterSpacing: '2px'
+            }}>
+              PROCESSING COMIC
+            </div>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              border: '6px solid var(--bg-cream)',
+              borderTop: '6px solid var(--crimson)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <p style={{ color: 'var(--text-ink)', fontWeight: 700, margin: 0, fontSize: '0.95rem' }}>
+              Parsing archive, extracting page content, and initializing model.
+            </p>
+          </div>
         </div>
       )}
 
@@ -112,7 +134,7 @@ export default function Library({ onSelectComic }: { onSelectComic: (id: string)
       </div>
 
       {comics.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '6rem 0', background: 'rgba(255,255,255,0.4)', border: '4px dashed var(--border-ink)', borderRadius: '8px' }}>
+        <div className="pulse-border" style={{ textAlign: 'center', padding: '6rem 0', borderRadius: '8px' }}>
           <BookOpen size={64} style={{ color: 'var(--text-ink)', marginBottom: '1.5rem', opacity: 0.7 }} />
           <p style={{ fontSize: '1.4rem', fontWeight: 600, margin: '0 0 0.5rem 0' }}>Your Library is Empty</p>
           <p style={{ fontSize: '1rem', opacity: 0.8 }}>Drag & drop CBZ/CBR files here or click "Import Comic" to upload.</p>
@@ -127,9 +149,9 @@ export default function Library({ onSelectComic }: { onSelectComic: (id: string)
               <div 
                 key={comic.id} 
                 onClick={() => onSelectComic(comic.id)}
-                className="retro-border"
+                className="retro-border retro-card-hover"
                 style={{
-                  background: 'white', cursor: 'pointer',
+                  background: 'white',
                   position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column'
                 }}
               >
@@ -146,6 +168,16 @@ export default function Library({ onSelectComic }: { onSelectComic: (id: string)
                       border: '2px solid var(--border-ink)', borderRadius: '12px', boxShadow: '2px 2px 0px var(--border-ink)'
                     }}>
                       {progressPct}% READ
+                    </div>
+                  )}
+                  {progressPct > 0 && (
+                    <div style={{
+                      position: 'absolute', bottom: 0, left: 0, right: 0, height: '8px',
+                      background: 'rgba(255,255,255,0.6)', borderTop: '2px solid var(--border-ink)'
+                    }}>
+                      <div style={{
+                        width: `${progressPct}%`, height: '100%', background: 'var(--crimson)'
+                      }} />
                     </div>
                   )}
                 </div>

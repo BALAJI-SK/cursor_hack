@@ -110,7 +110,8 @@ def get_comics():
     ]
 
 @app.post("/api/comics/import")
-async def import_comic(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def import_comic(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+
     comic_id = str(uuid.uuid4())
     file_path = f"uploads/{comic_id}_{file.filename}"
     

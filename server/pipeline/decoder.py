@@ -9,35 +9,29 @@ class YoloPanelDecoder:
         self.min_area = min_area_fraction * 640 * 640
 
     def decode(self, raw: np.ndarray, lb: dict) -> dict:
-        # Pass 1: Decode panels with default confidence threshold (0.25)
-        panels = self._decode_panels_with_threshold(raw, lb, self.confidence_threshold)
-        
-        # Pass 2: If no panels were found, fall back to a lower threshold (0.15) for panels
-        if not panels:
-            panels = self._decode_panels_with_threshold(raw, lb, 0.15)
+        panels_raw = []
+        bubbles_raw = []
 
-        # Bubbles are always decoded with the default threshold (0.25)
-        bubbles = self._decode_bubbles_with_threshold(raw, lb, self.confidence_threshold)
+        for i in range(raw.shape[0]):
+            score = raw[i, 4]
+            cls = int(raw[i, 5])
+            
+            # Lower threshold for panels to 0.15 globally to catch hand-drawn or less defined layouts.
+            # Keep bubbles at default threshold since text bubbles are high-contrast and distinct.
+            thresh = 0.15 if cls == 0 else self.confidence_threshold
+            if score < thresh:
+                continue
+            
+            box = raw[i, 0:5] # x1, y1, x2, y2, score
+            if cls == 0:
+                panels_raw.append(box)
+            elif cls == 1:
+                bubbles_raw.append(box)
+
+        panels = self._to_panels(self._suppress(panels_raw), lb, self.min_area)
+        bubbles = self._to_panels(self._suppress(bubbles_raw), lb, 0.0)
 
         return {"panels": panels, "bubbles": bubbles}
-
-    def _decode_panels_with_threshold(self, raw: np.ndarray, lb: dict, conf_thresh: float) -> list[Panel]:
-        panels_raw = []
-        for i in range(raw.shape[0]):
-            score = raw[i, 4]
-            cls = int(raw[i, 5])
-            if cls == 0 and score >= conf_thresh:
-                panels_raw.append(raw[i, 0:5])
-        return self._to_panels(self._suppress(panels_raw), lb, self.min_area)
-
-    def _decode_bubbles_with_threshold(self, raw: np.ndarray, lb: dict, conf_thresh: float) -> list[Panel]:
-        bubbles_raw = []
-        for i in range(raw.shape[0]):
-            score = raw[i, 4]
-            cls = int(raw[i, 5])
-            if cls == 1 and score >= conf_thresh:
-                bubbles_raw.append(raw[i, 0:5])
-        return self._to_panels(self._suppress(bubbles_raw), lb, 0.0)
 
     def _to_panels(self, boxes: list, lb: dict, min_area: float) -> list[Panel]:
         out = []
@@ -53,7 +47,6 @@ class YoloPanelDecoder:
             b = clip((box[3] - lb["padY"]) / lb["scale"] / pageH, 0.0, 1.0)
             if r > l and b > t:
                 out.append(Panel(l, t, r, b))
-          # If we got no panels and area was enough, we could log it, but match Kotlin logic exactly
         return out
 
     def _suppress(self, boxes: list) -> list:
@@ -62,9 +55,21 @@ class YoloPanelDecoder:
         for box in sorted_boxes:
             redundant = False
             for k in kept:
-                if self._iou(k, box) > self.nms_iou or self._contained_fraction(box, k) > self.containment_threshold:
+                # Check standard overlap (IoU)
+                if self._iou(k, box) > self.nms_iou:
                     redundant = True
                     break
+                # Check if the new box is contained inside an existing kept box 'k'
+                if self._contained_fraction(box, k) > self.containment_threshold:
+                    redundant = True
+                    break
+                # Check if the existing kept box 'k' is contained inside the new box
+                if self._contained_fraction(k, box) > self.containment_threshold:
+                    # If the engulfing new box has low confidence (< 0.25),
+                    # we discard the new box to protect the high-confidence panel 'k'.
+                    if box[4] < 0.25:
+                        redundant = True
+                        break
             if redundant:
                 continue
             

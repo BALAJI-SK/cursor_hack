@@ -133,20 +133,32 @@ async def import_comic(file: UploadFile = File(...), background_tasks: Backgroun
 @app.delete("/api/comics/{comic_id}")
 def delete_comic(comic_id: str):
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT file_path FROM comics WHERE id = ?", (comic_id,))
-    row = cursor.fetchone()
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Comic not found")
-    
-    file_path = row[0]
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT file_path FROM comics WHERE id = ?", (comic_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Comic not found")
         
-    cursor.execute("DELETE FROM comics WHERE id = ?", (comic_id,))
-    conn.commit()
-    conn.close()
+        file_path = row[0]
+        
+        # Retrieve all generated audio paths
+        cursor.execute("SELECT audio_path, sfx_path FROM panel_audio WHERE comic_id = ?", (comic_id,))
+        audio_rows = cursor.fetchall()
+        for r in audio_rows:
+            audio_path, sfx_path = r
+            if audio_path and os.path.exists(audio_path):
+                os.remove(audio_path)
+            if sfx_path and os.path.exists(sfx_path):
+                os.remove(sfx_path)
+        
+        if file_path and os.path.exists(file_path):
+            os.remove(file_path)
+            
+        cursor.execute("DELETE FROM comics WHERE id = ?", (comic_id,))
+        conn.commit()
+    finally:
+        conn.close()
     return {"success": True}
 
 @app.get("/api/comics/{comic_id}/cover")

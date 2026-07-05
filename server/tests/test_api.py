@@ -24,3 +24,65 @@ def test_api_endpoints():
 
     response = client.post("/api/comics/nonexistent/progress", json={"page": 5, "panel": 2})
     assert response.status_code == 200
+
+
+def test_delete_comic_deletes_audio_files():
+    from database import get_db_connection
+    init_db()
+
+    comic_id = "test-delete-comic-id"
+    comic_file = "uploads/test-delete-comic-archive.zip"
+    audio_path = "uploads/audio/test-delete-comic_p0_panel0_narration.mp3"
+    sfx_path = "uploads/audio/test-delete-comic_p0_panel0_sfx.mp3"
+
+    # Create dummy files on disk
+    os.makedirs("uploads/audio", exist_ok=True)
+    with open(comic_file, "w") as f:
+        f.write("dummy zip content")
+    with open(audio_path, "w") as f:
+        f.write("dummy audio content")
+    with open(sfx_path, "w") as f:
+        f.write("dummy sfx content")
+
+    # Insert mock DB records
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Clean up first
+    cursor.execute("DELETE FROM comics WHERE id = ?", (comic_id,))
+    cursor.execute("DELETE FROM panel_audio WHERE comic_id = ?", (comic_id,))
+    
+    cursor.execute(
+        "INSERT INTO comics (id, title, file_path, total_pages) VALUES (?, ?, ?, ?)",
+        (comic_id, "Test Delete Comic", comic_file, 1)
+    )
+    cursor.execute(
+        "INSERT INTO panel_audio (id, comic_id, page_number, panel_index, audio_path, sfx_path) VALUES (?, ?, ?, ?, ?, ?)",
+        ("test-audio-id", comic_id, 0, 0, audio_path, sfx_path)
+    )
+    conn.commit()
+    conn.close()
+
+    # Assert files exist before delete
+    assert os.path.exists(comic_file)
+    assert os.path.exists(audio_path)
+    assert os.path.exists(sfx_path)
+
+    # Perform deletion via API
+    response = client.delete(f"/api/comics/{comic_id}")
+    assert response.status_code == 200
+    assert response.json() == {"success": True}
+
+    # Assert files are deleted
+    assert not os.path.exists(comic_file)
+    assert not os.path.exists(audio_path)
+    assert not os.path.exists(sfx_path)
+
+    # Assert DB records are deleted
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM comics WHERE id = ?", (comic_id,))
+    assert cursor.fetchone() is None
+    cursor.execute("SELECT * FROM panel_audio WHERE comic_id = ?", (comic_id,))
+    assert cursor.fetchone() is None
+    conn.close()
+

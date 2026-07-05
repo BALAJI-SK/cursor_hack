@@ -264,6 +264,12 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
     }
     
     const p = panels[slot - 1];
+    if (!p) {
+      return {
+        transform: 'translate(0px, 0px) scale(1)',
+        transformOrigin: 'center center'
+      };
+    }
     const pw = p.right - p.left;
     const ph = p.bottom - p.top;
     const cx = (p.left + p.right) / 2;

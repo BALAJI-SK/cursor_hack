@@ -115,7 +115,7 @@ fun Reticle(
 
 /* ---- Logo system --------------------------------------------------------------- */
 
-/** "CHI·KA / CHITRA KATHA" lockup (cream + crimson Anton over an Archivo kicker). */
+/** "CHI·KA / AGAM KATHA" lockup (cream + crimson Anton over an Archivo kicker). */
 @Composable
 fun ChikaWordmark(modifier: Modifier = Modifier) {
     Column(modifier) {
@@ -128,7 +128,7 @@ fun ChikaWordmark(modifier: Modifier = Modifier) {
             fontSize = 28.sp,
         )
         Text(
-            text = "CHITRA KATHA",
+            text = "AGAM KATHA",
             fontFamily = Archivo,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 8.5.sp,

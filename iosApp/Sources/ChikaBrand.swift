@@ -101,13 +101,13 @@ struct ChikaMark: View {
     }
 }
 
-/// "CHI·KA / CHITRA KATHA" lockup (cream + crimson Anton over an Archivo kicker).
+/// "CHI·KA / AGAM KATHA" lockup (cream + crimson Anton over an Archivo kicker).
 struct ChikaWordmark: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             (Text("CHI").foregroundColor(Chika.cream) + Text("KA").foregroundColor(Chika.crimson))
                 .font(.anton(28))
-            KickerText("Chitra Katha", size: 8.5)
+            KickerText("Agam Katha", size: 8.5)
                 .tracking(2.6)
         }
     }

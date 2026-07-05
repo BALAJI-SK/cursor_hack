@@ -100,7 +100,7 @@ export default function Library({ onSelectComic }: { onSelectComic: (id: string)
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <div>
           <h1 className="title-font" style={{ fontSize: '3.5rem', margin: 0, color: 'var(--crimson)', WebkitTextStroke: '2px var(--border-ink)' }}>CHIKA</h1>
-          <h2 className="title-font" style={{ fontSize: '1.2rem', margin: '-5px 0 0 0', color: 'var(--text-ink)', letterSpacing: '2px' }}>Chitra Katha Reader</h2>
+          <h2 className="title-font" style={{ fontSize: '1.2rem', margin: '-5px 0 0 0', color: 'var(--text-ink)', letterSpacing: '2px' }}>Agam Katha Reader</h2>
         </div>
         <label className="retro-button">
           <Upload size={18} />

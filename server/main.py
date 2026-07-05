@@ -39,6 +39,10 @@ for candidate in model_candidates:
         model_path = candidate
         break
 
+print(f"[DEBUG] Current working directory: {os.getcwd()}")
+print(f"[DEBUG] Files in current directory: {os.listdir('.')}")
+print(f"[DEBUG] Selected model path: {model_path}")
+
 if model_path is None:
     # Set default but raise warning
     model_path = "app/src/main/assets/manga_panel_detector_int8.tflite"

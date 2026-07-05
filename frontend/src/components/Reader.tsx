@@ -31,6 +31,19 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
     return localStorage.getItem('chika_enable_sfx') !== 'false';
   });
   const [showAudioSettings, setShowAudioSettings] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowAudioSettings(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   // Audio refs
   const sfxAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -341,8 +354,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
           </button>
           
           <div 
-            onMouseEnter={() => setShowAudioSettings(true)}
-            onMouseLeave={() => setShowAudioSettings(false)}
+            ref={dropdownRef}
             style={{ position: 'relative' }}
           >
             <button 

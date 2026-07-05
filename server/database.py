@@ -17,6 +17,19 @@ def init_db():
             progress_panel INTEGER DEFAULT 0
         )
     """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS panel_audio (
+        id TEXT PRIMARY KEY,
+        comic_id TEXT NOT NULL,
+        page_number INTEGER NOT NULL,
+        panel_index INTEGER NOT NULL,
+        dialogue_text TEXT,
+        sfx_description TEXT,
+        audio_path TEXT,
+        sfx_path TEXT,
+        FOREIGN KEY(comic_id) REFERENCES comics(id) ON DELETE CASCADE
+    );
+    """)
     conn.commit()
     conn.close()
 

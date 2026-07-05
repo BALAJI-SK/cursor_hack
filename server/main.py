@@ -59,6 +59,7 @@ nvidia_client = NvidiaVlmClient(api_key=nvidia_api_key)
 audio_generator = AudioGenerator(api_key=eleven_api_key)
 
 def process_comic_background(comic_id: str, file_path: str):
+    conn = None
     try:
         pages = archive_manager.list_pages(file_path)
         conn = get_db_connection()
@@ -78,9 +79,11 @@ def process_comic_background(comic_id: str, file_path: str):
                 db_conn=conn,
                 rtl=False
             )
-        conn.close()
     except Exception as e:
         print(f"[ERROR] Background processing failed for comic {comic_id}: {e}")
+    finally:
+        if conn is not None:
+            conn.close()
 
 @app.get("/api/comics")
 def get_comics():
@@ -184,33 +187,34 @@ def get_page(comic_id: str, page_num: int):
 @app.get("/api/comics/{comic_id}/pages/{page_num}/panels")
 def get_panels(comic_id: str, page_num: int, rtl: bool = False):
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT file_path FROM comics WHERE id = ?", (comic_id,))
-    row = cursor.fetchone()
-    if not row:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Comic not found")
-    
-    pages = archive_manager.list_pages(row[0])
-    if page_num < 0 or page_num >= len(pages):
-        conn.close()
-        raise HTTPException(status_code=404, detail="Page index out of bounds")
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT file_path FROM comics WHERE id = ?", (comic_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Comic not found")
         
-    page_bytes = archive_manager.extract_page(row[0], pages[page_num])
-    img = Image.open(io.BytesIO(page_bytes))
-    
-    # Run inference and get zoom regions
-    raw_out, lb = model_runner.run_inference(img)
-    decoded = decoder.decode(raw_out[0], lb)
-    regions = PanelPipeline.zoom_regions(decoded["panels"], decoded["bubbles"], img.width, img.height, rtl)
-    
-    # Get audio URLs
-    cursor.execute("""
-        SELECT panel_index, audio_path, sfx_path FROM panel_audio
-        WHERE comic_id = ? AND page_number = ?
-    """, (comic_id, page_num))
-    audio_rows = cursor.fetchall()
-    conn.close()
+        pages = archive_manager.list_pages(row[0])
+        if page_num < 0 or page_num >= len(pages):
+            raise HTTPException(status_code=404, detail="Page index out of bounds")
+            
+        page_bytes = archive_manager.extract_page(row[0], pages[page_num])
+        img = Image.open(io.BytesIO(page_bytes))
+        
+        # Run inference and get zoom regions
+        raw_out, lb = model_runner.run_inference(img)
+        decoded = decoder.decode(raw_out[0], lb)
+        regions = PanelPipeline.zoom_regions(decoded["panels"], decoded["bubbles"], img.width, img.height, rtl)
+        regions_ltr = PanelPipeline.zoom_regions(decoded["panels"], decoded["bubbles"], img.width, img.height, False)
+        
+        # Get audio URLs
+        cursor.execute("""
+            SELECT panel_index, audio_path, sfx_path FROM panel_audio
+            WHERE comic_id = ? AND page_number = ?
+        """, (comic_id, page_num))
+        audio_rows = cursor.fetchall()
+    finally:
+        conn.close()
     
     audio_map = {}
     for r in audio_rows:
@@ -234,7 +238,19 @@ def get_panels(comic_id: str, page_num: int, rtl: bool = False):
     res_list = []
     for idx, r in enumerate(regions):
         r_dict = r.to_dict()
-        audio_info = audio_map.get(idx, {"audioUrl": None, "sfxUrl": None})
+        # Find index of coordinate match in regions_ltr within 1e-4 tolerance
+        matched_idx = None
+        for ltr_idx, r_ltr in enumerate(regions_ltr):
+            if (abs(r.left - r_ltr.left) < 1e-4 and
+                abs(r.top - r_ltr.top) < 1e-4 and
+                abs(r.right - r_ltr.right) < 1e-4 and
+                abs(r.bottom - r_ltr.bottom) < 1e-4):
+                matched_idx = ltr_idx
+                break
+        if matched_idx is None:
+            matched_idx = idx
+            
+        audio_info = audio_map.get(matched_idx, {"audioUrl": None, "sfxUrl": None})
         r_dict["audioUrl"] = audio_info["audioUrl"]
         r_dict["sfxUrl"] = audio_info["sfxUrl"]
         res_list.append(r_dict)
@@ -245,6 +261,8 @@ def get_panels(comic_id: str, page_num: int, rtl: bool = False):
 def stream_audio(comic_id: str, filename: str):
     # Prevent directory traversal
     safe_filename = os.path.basename(filename)
+    if not safe_filename.startswith(f"{comic_id}_"):
+        raise HTTPException(status_code=403, detail="Access denied to this comic's audio")
     audio_dir = "uploads/audio"
     file_path = os.path.join(audio_dir, safe_filename)
     if not os.path.exists(file_path):

@@ -121,8 +121,12 @@ def test_audio_generation_and_streaming():
     assert response.status_code == 200
     assert response.content == b"sfx_audio_bytes"
     
-    # Test streaming endpoint for nonexistent file
+    # Test streaming endpoint for nonexistent file (invalid prefix -> 403)
     response = client.get(f"/api/audio/{comic_id}/nonexistent.mp3")
+    assert response.status_code == 403
+    
+    # Test streaming endpoint for nonexistent file (valid prefix, missing file -> 404)
+    response = client.get(f"/api/audio/{comic_id}/{comic_id}_nonexistent.mp3")
     assert response.status_code == 404
     
     # Cleanup
@@ -241,3 +245,176 @@ def test_import_comic_with_audio_pipeline(tmp_path):
             os.remove(row[2])
         if os.path.exists(row[3]):
             os.remove(row[3])
+
+
+def test_rtl_audio_coordinate_matching_and_resilience():
+    init_db()
+    comic_id = "test-comic-rtl-resilience"
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM comics WHERE id = ?", (comic_id,))
+    cursor.execute("DELETE FROM panel_audio WHERE comic_id = ?", (comic_id,))
+    cursor.execute(
+        "INSERT INTO comics (id, title, file_path, total_pages) VALUES (?, ?, ?, ?)",
+        (comic_id, "RTL Test Comic", "test_file.zip", 1)
+    )
+    # Insert an audio row mapped to panel_index = 0, which corresponds to the first panel in LTR order.
+    audio_path = os.path.join("uploads", "audio", f"{comic_id}_p0_panel0_narration.mp3")
+    os.makedirs("uploads/audio", exist_ok=True)
+    with open(audio_path, "wb") as f:
+        f.write(b"panel0_ltr_audio")
+        
+    cursor.execute("""
+        INSERT INTO panel_audio (id, comic_id, page_number, panel_index, dialogue_text, sfx_description, audio_path, sfx_path)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (f"{comic_id}_0_0", comic_id, 0, 0, "Dialogue Panel 0 LTR", "SFX Panel 0 LTR", audio_path, None))
+    conn.commit()
+    conn.close()
+
+    img = Image.new("RGB", (100, 100))
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="JPEG")
+    img_bytes = img_byte_arr.getvalue()
+
+    mock_model_runner = MagicMock()
+    mock_model_runner.run_inference.return_value = ([None], {})
+    mock_decoder = MagicMock()
+    mock_decoder.decode.return_value = {"panels": [], "bubbles": []}
+
+    panel_A = Panel(0.0, 0.0, 0.5, 1.0)
+    panel_B = Panel(0.5, 0.0, 1.0, 1.0)
+
+    def side_effect_zoom_regions(panels, bubbles, w, h, rightToLeft):
+        if rightToLeft:
+            return [panel_B, panel_A]
+        else:
+            return [panel_A, panel_B]
+
+    with patch("server.main.model_runner", mock_model_runner), \
+         patch("server.main.decoder", mock_decoder), \
+         patch("server.main.archive_manager") as mock_archive_manager, \
+         patch("server.main.PanelPipeline.zoom_regions", side_effect=side_effect_zoom_regions):
+
+        mock_archive_manager.list_pages.return_value = ["page1.jpg"]
+        mock_archive_manager.extract_page.return_value = img_bytes
+
+        # Query panels with rtl=True
+        response = client.get(f"/api/comics/{comic_id}/pages/0/panels?rtl=true")
+        assert response.status_code == 200
+        data = response.json()
+        
+        # There should be 2 panels:
+        # index 0 should be Panel B (left=0.5), which is at index 1 in LTR order.
+        # index 1 should be Panel A (left=0.0), which is at index 0 in LTR order (should have audio URL).
+        assert len(data) == 2
+        
+        # Panel B (idx 0 in RTL response)
+        assert abs(data[0]["left"] - 0.5) < 1e-4
+        assert data[0]["audioUrl"] is None
+        
+        # Panel A (idx 1 in RTL response)
+        assert abs(data[1]["left"] - 0.0) < 1e-4
+        assert data[1]["audioUrl"] == f"/api/audio/{comic_id}/{comic_id}_p0_panel0_narration.mp3"
+
+    # Cleanup DB and file
+    if os.path.exists(audio_path):
+        os.remove(audio_path)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM comics WHERE id = ?", (comic_id,))
+    cursor.execute("DELETE FROM panel_audio WHERE comic_id = ?", (comic_id,))
+    conn.commit()
+    conn.close()
+
+
+def test_pipeline_api_resilience():
+    # Setup mock image
+    img = Image.new("RGB", (100, 100))
+    
+    # Mock clients
+    mock_nvidia_fail = MagicMock()
+    mock_nvidia_fail.analyze_panel.side_effect = Exception("Nvidia connection failed")
+    
+    mock_audio_gen = MagicMock()
+    mock_model_runner = MagicMock()
+    mock_model_runner.run_inference.return_value = ([None], {})
+    mock_decoder = MagicMock()
+    mock_decoder.decode.return_value = {"panels": [], "bubbles": []}
+    
+    with patch("server.pipeline.pipeline.PanelPipeline.zoom_regions") as mock_zoom:
+        mock_zoom.return_value = [Panel(0.0, 0.0, 1.0, 1.0)]
+        
+        # 1. Nvidia fail test
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        comic_id = "test-resilience-nvidia"
+        cursor.execute("DELETE FROM comics WHERE id = ?", (comic_id,))
+        cursor.execute("DELETE FROM panel_audio WHERE comic_id = ?", (comic_id,))
+        cursor.execute(
+            "INSERT INTO comics (id, title, file_path, total_pages) VALUES (?, ?, ?, ?)",
+            (comic_id, "Test Resilient Comic", "test_file.zip", 1)
+        )
+        conn.commit()
+        
+        from server.pipeline.pipeline import process_page
+        # Should not raise exception
+        process_page(
+            comic_id=comic_id,
+            page_number=0,
+            img=img,
+            model_runner=mock_model_runner,
+            decoder=mock_decoder,
+            nvidia_client=mock_nvidia_fail,
+            audio_generator=mock_audio_gen,
+            db_conn=conn,
+            rtl=False
+        )
+        
+        cursor.execute("SELECT dialogue_text, sfx_description FROM panel_audio WHERE comic_id = ?", (comic_id,))
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "" # Defaulted to empty string
+        assert row[1] == "" # Defaulted to empty string
+        
+        # 2. ElevenLabs fail test
+        mock_nvidia_ok = MagicMock()
+        mock_nvidia_ok.analyze_panel.return_value = {"dialogue": "Hello", "sfx": "Boom"}
+        
+        mock_audio_gen_fail = MagicMock()
+        mock_audio_gen_fail.generate_tts.side_effect = Exception("ElevenLabs TTS failure")
+        sfx_path = os.path.join("uploads", "audio", f"{comic_id}_p0_panel0_sfx.mp3")
+        def side_effect_sfx(desc, path):
+            with open(path, "wb") as f:
+                f.write(b"sfx")
+        mock_audio_gen_fail.generate_sfx.side_effect = side_effect_sfx
+        
+        cursor.execute("DELETE FROM panel_audio WHERE comic_id = ?", (comic_id,))
+        conn.commit()
+        
+        process_page(
+            comic_id=comic_id,
+            page_number=0,
+            img=img,
+            model_runner=mock_model_runner,
+            decoder=mock_decoder,
+            nvidia_client=mock_nvidia_ok,
+            audio_generator=mock_audio_gen_fail,
+            db_conn=conn,
+            rtl=False
+        )
+        
+        cursor.execute("SELECT dialogue_text, sfx_description, audio_path, sfx_path FROM panel_audio WHERE comic_id = ?", (comic_id,))
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "Hello"
+        assert row[1] == "Boom"
+        assert row[2] is None # Failed to generate TTS
+        assert row[3] is not None # Succeeded in generating SFX
+        
+        # Cleanup
+        if row[3] and os.path.exists(row[3]):
+            os.remove(row[3])
+        cursor.execute("DELETE FROM comics WHERE id = ?", (comic_id,))
+        cursor.execute("DELETE FROM panel_audio WHERE comic_id = ?", (comic_id,))
+        conn.commit()
+        conn.close()

@@ -50,9 +50,14 @@ def process_page(
         image_bytes = buf.getvalue()
         
         # Call NVIDIA VLM to extract dialogue and sfx description
-        analysis = nvidia_client.analyze_panel(image_bytes)
-        dialogue_text = analysis.get("dialogue", "")
-        sfx_description = analysis.get("sfx", "")
+        try:
+            analysis = nvidia_client.analyze_panel(image_bytes)
+            dialogue_text = analysis.get("dialogue", "")
+            sfx_description = analysis.get("sfx", "")
+        except Exception as e:
+            print(f"[WARNING] NVIDIA VLM call failed for panel {panel_index}: {e}")
+            dialogue_text = ""
+            sfx_description = ""
         
         audio_filename = f"{comic_id}_p{page_number}_panel{panel_index}_narration.mp3"
         sfx_filename = f"{comic_id}_p{page_number}_panel{panel_index}_sfx.mp3"
@@ -61,18 +66,24 @@ def process_page(
         
         # Call ElevenLabs to generate TTS
         if dialogue_text:
-            audio_generator.generate_tts(dialogue_text, audio_path)
-            # If the file wasn't written (e.g. because key was missing or request failed/did nothing), set path to None
-            if not os.path.exists(audio_path):
+            try:
+                audio_generator.generate_tts(dialogue_text, audio_path)
+                if not os.path.exists(audio_path):
+                    audio_path = None
+            except Exception as e:
+                print(f"[WARNING] ElevenLabs TTS call failed for panel {panel_index}: {e}")
                 audio_path = None
         else:
             audio_path = None
             
         # Call ElevenLabs to generate SFX
         if sfx_description:
-            audio_generator.generate_sfx(sfx_description, sfx_path)
-            # If the file wasn't written, set path to None
-            if not os.path.exists(sfx_path):
+            try:
+                audio_generator.generate_sfx(sfx_description, sfx_path)
+                if not os.path.exists(sfx_path):
+                    sfx_path = None
+            except Exception as e:
+                print(f"[WARNING] ElevenLabs SFX call failed for panel {panel_index}: {e}")
                 sfx_path = None
         else:
             sfx_path = None

@@ -1,10 +1,8 @@
 FROM python:3.11-slim
 
 # Install unrar binary dependencies for CBR/RAR extraction
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     unrar-free \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

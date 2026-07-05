@@ -34,4 +34,8 @@ def init_db():
     conn.close()
 
 def get_db_connection():
-    return sqlite3.connect(DB_PATH)
+    os.makedirs("uploads", exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
+

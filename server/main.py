@@ -64,6 +64,13 @@ def process_comic_background(comic_id: str, file_path: str):
         pages = archive_manager.list_pages(file_path)
         conn = get_db_connection()
         for idx, page_name in enumerate(pages):
+            # Check if comic still exists in the database
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM comics WHERE id = ?", (comic_id,))
+            if not cursor.fetchone():
+                print(f"[INFO] Comic {comic_id} not found in database. Terminating background processing.")
+                break
+
             page_bytes = archive_manager.extract_page(file_path, page_name)
             img = Image.open(io.BytesIO(page_bytes))
             # Call process_page from pipeline

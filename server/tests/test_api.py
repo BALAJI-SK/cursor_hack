@@ -86,3 +86,31 @@ def test_delete_comic_deletes_audio_files():
     assert cursor.fetchone() is None
     conn.close()
 
+
+def test_process_comic_background_liveness_check(tmp_path):
+    from PIL import Image
+    import io
+    import zipfile
+    from unittest.mock import patch
+    from main import process_comic_background
+    from database import init_db
+
+    init_db()
+
+    # Create mock CBZ/zip
+    cbz_path = tmp_path / "comic_liveness.cbz"
+    with zipfile.ZipFile(cbz_path, 'w') as z:
+        img = Image.new("RGB", (100, 100), color="blue")
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format="JPEG")
+        z.writestr("page1.jpg", img_bytes.getvalue())
+
+    # We do NOT insert this comic into the database.
+    comic_id = "nonexistent-liveness-id"
+
+    # Mock pipeline's process_page to verify it's never called
+    with patch("pipeline.pipeline.process_page") as mock_process_page:
+        process_comic_background(comic_id, str(cbz_path))
+        mock_process_page.assert_not_called()
+
+

@@ -9,7 +9,9 @@ import shutil
 # Fixture to ensure placeholder directory and files exist for tests
 @pytest.fixture(autouse=True)
 def setup_sfx_assets():
-    os.makedirs("server/assets/sfx", exist_ok=True)
+    gen = AudioGenerator("dummy")
+    sfx_dir = gen.sfx_dir
+    os.makedirs(sfx_dir, exist_ok=True)
     placeholders = {
         "slash.mp3": b"fake_slash_mp3",
         "boom.mp3": b"fake_boom_mp3",
@@ -18,8 +20,9 @@ def setup_sfx_assets():
         "gasp.mp3": b"fake_gasp_mp3",
     }
     for filename, content in placeholders.items():
-        with open(os.path.join("server/assets/sfx", filename), "wb") as f:
+        with open(os.path.join(sfx_dir, filename), "wb") as f:
             f.write(content)
+
 
 def test_local_sfx_mapping_exact():
     gen = AudioGenerator("fake_key")

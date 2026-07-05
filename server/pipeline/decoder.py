@@ -12,9 +12,12 @@ class YoloPanelDecoder:
         panels_raw = []
         bubbles_raw = []
 
+        print(f"\n[DEBUG] --- RAW YOLO DETECTIONS (Total candidates: {raw.shape[0]}) ---")
         for i in range(raw.shape[0]):
             score = raw[i, 4]
             cls = int(raw[i, 5])
+            if score >= 0.05: # log anything above 0.05 for debugging
+                print(f"  Class: {cls} (0=panel, 1=bubble), Score: {score:.3f}, Box: {raw[i, 0:4]}")
             
             # Lower threshold for panels to 0.15 globally to catch hand-drawn or less defined layouts.
             # Keep bubbles at default threshold since text bubbles are high-contrast and distinct.
@@ -28,9 +31,16 @@ class YoloPanelDecoder:
             elif cls == 1:
                 bubbles_raw.append(box)
 
-        panels = self._to_panels(self._suppress(panels_raw), lb, self.min_area)
+        print(f"[DEBUG] Panels input to NMS: {len(panels_raw)}")
+        suppressed_panels = self._suppress(panels_raw)
+        print(f"[DEBUG] Panels kept after NMS: {len(suppressed_panels)}")
+        for idx, box in enumerate(suppressed_panels):
+            print(f"  Kept Panel {idx}: Score {box[4]:.3f}, Box: {box[0:4]}")
+
+        panels = self._to_panels(suppressed_panels, lb, self.min_area)
         bubbles = self._to_panels(self._suppress(bubbles_raw), lb, 0.0)
 
+        print(f"[DEBUG] Final output panels count: {len(panels)}")
         return {"panels": panels, "bubbles": bubbles}
 
     def _to_panels(self, boxes: list, lb: dict, min_area: float) -> list[Panel]:

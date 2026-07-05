@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB_PATH = "uploads/chika.db"
+DB_PATH = "uploads/AGAM.db"
 
 def init_db():
     os.makedirs("uploads", exist_ok=True)

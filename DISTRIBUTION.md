@@ -1,6 +1,6 @@
-# Distributing Chika (free / FOSS channels)
+# Distributing AGAM (free / FOSS channels)
 
-Chika is built to be distributable through FOSS app repositories without a paid developer account.
+AGAM is built to be distributable through FOSS app repositories without a paid developer account.
 It already meets the core requirements:
 
 - **License:** Mozilla Public License 2.0 (FOSS) — see [`LICENSE`](LICENSE).
@@ -24,7 +24,7 @@ at most minor non-free components (flagged). Steps:
 2. Open an inclusion request issue at **https://codeberg.org/IzzyOnDroid/repodata/issues** (use the
    inclusion template). They check the license, scan for anti-features, and pull the APK + the
    fastlane metadata.
-3. Users add the IzzyOnDroid repo to the F-Droid client and install Chika.
+3. Users add the IzzyOnDroid repo to the F-Droid client and install AGAM.
 
 ## Route B — F-Droid main repo (more rigorous)
 
@@ -57,9 +57,9 @@ A ready-to-submit recipe is in [`fdroid/com.chakra.comicreader.yml`](fdroid/com.
 
 **IzzyOnDroid request** — open an issue at https://codeberg.org/IzzyOnDroid/repodata/issues with:
 
-> **App:** Chika — Chitra Katha
+> **App:** AGAM — Chitra Katha
 > **Package:** `com.chakra.comicreader`
-> **Source:** https://github.com/batunii/chika
+> **Source:** https://github.com/batunii/AGAM
 > **License:** MPL-2.0 (FOSS)
 > **Releases:** signed APKs attached to GitHub Releases (`v*` tags); fastlane metadata in
 > `fastlane/metadata/android/en-US`.

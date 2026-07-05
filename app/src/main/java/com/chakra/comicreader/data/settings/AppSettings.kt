@@ -10,7 +10,7 @@ import android.content.Context
  * half of "remembered per comic + a global default", matching the iOS app's ReadingPrefs.
  */
 class AppSettings(context: Context) {
-    private val prefs = context.getSharedPreferences("chika.settings", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences("AGAM.settings", Context.MODE_PRIVATE)
 
     var defaultRightToLeft: Boolean
         get() = prefs.getBoolean(KEY_DEFAULT_RTL, false)

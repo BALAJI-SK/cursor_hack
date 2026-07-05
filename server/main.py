@@ -16,7 +16,7 @@ from pipeline.audio_generator import AudioGenerator
 
 init_db()
 
-app = FastAPI(title="Chika API")
+app = FastAPI(title="AGAM API")
 
 app.add_middleware(
     CORSMiddleware,

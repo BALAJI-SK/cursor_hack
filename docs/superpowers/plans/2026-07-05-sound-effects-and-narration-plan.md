@@ -27,7 +27,7 @@
 
 - [ ] **Step 1: Write the database schema update**
   
-  Add `panel_audio` table creation logic in [server/database.py](file:///Users/balajisk/cursor_hackthon/chika/server/database.py):
+  Add `panel_audio` table creation logic in [server/database.py](file:///Users/balajisk/cursor_hackthon/AGAM/server/database.py):
   ```python
   # In database.py, inside the init_db() SQL commands block
   cursor.execute("""
@@ -315,7 +315,7 @@
 
 - [ ] **Step 2: Add API streaming and updated panel endpoints**
   
-  Modify [server/main.py](file:///Users/balajisk/cursor_hackthon/chika/server/main.py) to:
+  Modify [server/main.py](file:///Users/balajisk/cursor_hackthon/AGAM/server/main.py) to:
   * Add endpoint `/api/audio/{comic_id}/{filename}` to stream `.mp3` files from `/app/uploads/audio/`.
   * Update `/api/comics/{comic_id}/pages/{page}/panels` to join `panel_audio` and return:
     `"audioUrl"` and `"sfxUrl"`.

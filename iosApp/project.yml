@@ -1,8 +1,8 @@
-# XcodeGen spec for the Chika iOS app. The Xcode project is generated, not committed:
+# XcodeGen spec for the AGAM iOS app. The Xcode project is generated, not committed:
 #   xcodegen generate --spec iosApp/project.yml --project iosApp
 # The Kotlin :shared framework is built by a pre-build script phase (and explicitly in CI), so
 # opening the generated project in Xcode "just works" as long as a JDK is on PATH.
-name: Chika
+name: AGAM
 options:
   bundleIdPrefix: com.chakra
   deploymentTarget:
@@ -25,7 +25,7 @@ packages:
     exactVersion: "1.0.0"
 
 targets:
-  Chika:
+  AGAM:
     type: application
     platform: iOS
     sources:
@@ -37,7 +37,7 @@ targets:
     info:
       path: Sources/Info.plist
       properties:
-        CFBundleDisplayName: Chika
+        CFBundleDisplayName: AGAM
         UILaunchScreen: {}
         UIAppFonts:
           - Anton-Regular.ttf
@@ -84,7 +84,7 @@ targets:
         OTHER_LDFLAGS:
           - "$(inherited)"
           - "-framework"
-          - "ChikaShared"
+          - "AGAMShared"
     preBuildScripts:
       - name: Build Kotlin shared framework
         script: |
@@ -97,10 +97,10 @@ targets:
         basedOnDependencyAnalysis: false
 
 schemes:
-  Chika:
+  AGAM:
     build:
       targets:
-        Chika: all
+        AGAM: all
     run:
       config: Debug
     archive:

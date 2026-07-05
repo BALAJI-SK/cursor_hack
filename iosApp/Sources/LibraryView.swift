@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The Chika library — pulp-comic identity matching the Android design: ink ground with a halftone
+/// The AGAM library — pulp-comic identity matching the Android design: ink ground with a halftone
 /// wash, the three-panel mark + CHI·KA wordmark, an ochre "YOUR LIBRARY" badge, and a two-column
 /// grid of comic cards with issue tags and Anton titles.
 struct LibraryView: View {
@@ -20,8 +20,8 @@ struct LibraryView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
-                Chika.ink.ignoresSafeArea()
-                Halftone(color: Chika.cream, alpha: 0.05).ignoresSafeArea()
+                AGAM.ink.ignoresSafeArea()
+                Halftone(color: AGAM.cream, alpha: 0.05).ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     header
@@ -34,11 +34,11 @@ struct LibraryView: View {
 
                 if library.importing {
                     VStack(spacing: 10) {
-                        ProgressView().tint(Chika.ochre)
+                        ProgressView().tint(AGAM.ochre)
                         KickerText("Converting CBR…")
                     }
                     .padding(24)
-                    .background(Chika.inkSoft.opacity(0.95))
+                    .background(AGAM.inkSoft.opacity(0.95))
                     .clipShape(RoundedCornerShape(cornerRadius: 6))
                 }
             }
@@ -68,11 +68,11 @@ struct LibraryView: View {
         }
     }
 
-    /// QA hook: when launched with the CHIKA_DEBUG_OPEN env var (an index or filename substring),
+    /// QA hook: when launched with the AGAM_DEBUG_OPEN env var (an index or filename substring),
     /// push straight into that comic's reader. Never set in production, so this is a no-op there.
     private func autoOpenIfDebug() {
         guard path.isEmpty,
-              let target = ProcessInfo.processInfo.environment["CHIKA_DEBUG_OPEN"],
+              let target = ProcessInfo.processInfo.environment["AGAM_DEBUG_OPEN"],
               !library.comics.isEmpty else { return }
         let match = Int(target).flatMap { library.comics.indices.contains($0) ? library.comics[$0] : nil }
             ?? library.comics.first { $0.lastPathComponent.localizedCaseInsensitiveContains(target) }
@@ -89,15 +89,15 @@ struct LibraryView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 12) {
-                ChikaMark(size: 40)
-                ChikaWordmark()
+                AGAMMark(size: 40)
+                AGAMWordmark()
                 Spacer()
                 Button { showPicker = true } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(Chika.ink)
+                        .foregroundColor(AGAM.ink)
                         .frame(width: 38, height: 38)
-                        .background(Chika.ochre)
+                        .background(AGAM.ochre)
                         .clipShape(RoundedCornerShape(cornerRadius: 3))
                         .comicShadow(offset: 3, color: .black.opacity(0.6), corner: 3)
                 }
@@ -111,11 +111,11 @@ struct LibraryView: View {
                     ReadingPrefs.defaultRightToLeft = defaultRTL
                 } label: {
                     VStack(alignment: .trailing, spacing: 1) {
-                        KickerText("New comics open", size: 7, color: Chika.creamMuted)
+                        KickerText("New comics open", size: 7, color: AGAM.creamMuted)
                         Text(defaultRTL ? "RTL" : "LTR")
-                            .font(.archivo(12)).foregroundColor(Chika.ink)
+                            .font(.archivo(12)).foregroundColor(AGAM.ink)
                             .padding(.horizontal, 10).padding(.vertical, 4)
-                            .background(Chika.ochre)
+                            .background(AGAM.ochre)
                             .clipShape(RoundedCornerShape(cornerRadius: 3))
                     }
                 }
@@ -149,14 +149,14 @@ struct LibraryView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
-            ChikaMark(size: 72)
-            Text("NO COMICS YET").font(.anton(22)).foregroundColor(Chika.cream)
+            AGAMMark(size: 72)
+            Text("NO COMICS YET").font(.anton(22)).foregroundColor(AGAM.cream)
             KickerText("Tap + to import a CBZ/CBR from Files")
             // Diagnostic: shows what the app actually sees on disk, so an import-vs-render issue is
             // visible. Tap the storage line to re-scan.
             Text(library.storageReport)
                 .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(Chika.creamMuted)
+                .foregroundColor(AGAM.creamMuted)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
                 .onTapGesture { library.refresh() }
@@ -194,12 +194,12 @@ struct ComicCard: View {
                         Image(uiImage: cover).resizable().aspectRatio(contentMode: .fill)
                     } else {
                         ZStack {
-                            Chika.maroon
-                            Halftone(color: Chika.ink, alpha: 0.18)
+                            AGAM.maroon
+                            Halftone(color: AGAM.ink, alpha: 0.18)
                             // Diagnostic (shown only until covers work): why page-0 didn't render.
                             Text(coverDebug)
                                 .font(.system(size: 9, design: .monospaced))
-                                .foregroundColor(Chika.cream.opacity(0.9))
+                                .foregroundColor(AGAM.cream.opacity(0.9))
                                 .multilineTextAlignment(.center)
                                 .padding(6)
                         }
@@ -209,19 +209,19 @@ struct ComicCard: View {
                 .frame(maxWidth: .infinity)
                 .clipped()
 
-                LinearGradient(colors: [.clear, Chika.ink.opacity(0.85)], startPoint: .center, endPoint: .bottom)
+                LinearGradient(colors: [.clear, AGAM.ink.opacity(0.85)], startPoint: .center, endPoint: .bottom)
 
                 Text(title)
-                    .font(.anton(20)).foregroundColor(Chika.cream).lineLimit(2)
+                    .font(.anton(20)).foregroundColor(AGAM.cream).lineLimit(2)
                     .padding(12)
 
-                KickerText("Issue \(issue)", size: 8, color: Chika.creamMuted)
+                KickerText("Issue \(issue)", size: 8, color: AGAM.creamMuted)
                     .padding(10)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
             .frame(height: 220)
             .clipShape(RoundedCornerShape(cornerRadius: 4))
-            .overlay(RoundedCornerShape(cornerRadius: 4).stroke(Chika.ink, lineWidth: 2))
+            .overlay(RoundedCornerShape(cornerRadius: 4).stroke(AGAM.ink, lineWidth: 2))
             .comicShadow(offset: 4, color: .black.opacity(0.55), corner: 4)
 
             progressFooter
@@ -238,8 +238,8 @@ struct ComicCard: View {
             VStack(alignment: .leading, spacing: 3) {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Chika.inkSoft).frame(height: 3)
-                        Capsule().fill(Chika.ochre)
+                        Capsule().fill(AGAM.inkSoft).frame(height: 3)
+                        Capsule().fill(AGAM.ochre)
                             .frame(width: max(3, geo.size.width * progress.fraction), height: 3)
                     }
                 }

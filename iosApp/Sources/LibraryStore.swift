@@ -1,6 +1,6 @@
 import Foundation
 import UniformTypeIdentifiers
-import ChikaShared
+import AGAMShared
 
 /// Comics live as plain .cbz files in Documents/Comics. Importing a CBZ/ZIP copies it in; importing
 /// a CBR/RAR converts it to CBZ first (see CbrConverter) so the reader only handles ZIP. The list

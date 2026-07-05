@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Chika · Chitra Katha brand palette — kept in sync with the Android theme (Color.kt).
-enum Chika {
+/// AGAM · Chitra Katha brand palette — kept in sync with the Android theme (Color.kt).
+enum AGAM {
     static let ink = Color(hex: 0x17100E)
     static let inkSoft = Color(hex: 0x2A201C)
     static let crimson = Color(hex: 0xD11F2D)
@@ -38,8 +38,8 @@ extension Color {
 struct KickerText: View {
     let text: String
     var size: CGFloat = 11
-    var color: Color = Chika.creamMuted
-    init(_ text: String, size: CGFloat = 11, color: Color = Chika.creamMuted) {
+    var color: Color = AGAM.creamMuted
+    init(_ text: String, size: CGFloat = 11, color: Color = AGAM.creamMuted) {
         self.text = text; self.size = size; self.color = color
     }
     var body: some View {

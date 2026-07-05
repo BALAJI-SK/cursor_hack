@@ -6,11 +6,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Chika is a dark, ink-grounded comic reader, so the theme is always the brand dark scheme
+ * AGAM is a dark, ink-grounded comic reader, so the theme is always the brand dark scheme
  * (no system light/dark switch). Material colors map onto the brand palette so stock components
  * pick up the identity; bespoke comic styling lives in the brand component kit.
  */
-private val ChikaColorScheme = darkColorScheme(
+private val AGAMColorScheme = darkColorScheme(
     primary = Crimson,
     onPrimary = Cream,
     primaryContainer = Maroon,
@@ -36,7 +36,7 @@ private val ChikaColorScheme = darkColorScheme(
  * AMOLED variant: the ink grounds collapse to true black so OLED pixels switch fully off, while the
  * brand accents (crimson/ochre/cream) carry through unchanged.
  */
-private val ChikaAmoledColorScheme = ChikaColorScheme.copy(
+private val AGAMAmoledColorScheme = AGAMColorScheme.copy(
     background = Color.Black,
     surface = Color.Black,
     surfaceVariant = Color(0xFF101010),
@@ -45,8 +45,8 @@ private val ChikaAmoledColorScheme = ChikaColorScheme.copy(
 @Composable
 fun ComicReaderTheme(amoled: Boolean = false, content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = if (amoled) ChikaAmoledColorScheme else ChikaColorScheme,
-        typography = ChikaTypography,
+        colorScheme = if (amoled) AGAMAmoledColorScheme else AGAMColorScheme,
+        typography = AGAMTypography,
         content = content,
     )
 }

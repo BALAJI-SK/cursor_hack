@@ -18,8 +18,8 @@ struct Progress: Codable, Equatable {
 /// hasn't explicitly toggled yet — the global half of "remembered per comic + a global default",
 /// matching Android's behaviour.
 enum ReadingPrefs {
-    private static let directionKey = "chika.readingDirection.default.rtl"
-    private static let fillKey = "chika.zoomFill"
+    private static let directionKey = "AGAM.readingDirection.default.rtl"
+    private static let fillKey = "AGAM.zoomFill"
     private static let defaults = UserDefaults.standard
 
     static var defaultRightToLeft: Bool {
@@ -37,7 +37,7 @@ enum ReadingPrefs {
 }
 
 enum ReadingProgress {
-    private static let key = "chika.progress.v1"
+    private static let key = "AGAM.progress.v1"
     private static let defaults = UserDefaults.standard
 
     private static func load() -> [String: Progress] {

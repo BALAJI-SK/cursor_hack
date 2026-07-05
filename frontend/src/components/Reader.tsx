@@ -22,16 +22,16 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
   const [loadingPanels, setLoadingPanels] = useState(false);
 
   const [isMuted, setIsMuted] = useState<boolean>(() => {
-    return localStorage.getItem('chika_is_muted') === 'true';
+    return localStorage.getItem('AGAM_is_muted') === 'true';
   });
   const [enableNarrator, setEnableNarrator] = useState<boolean>(() => {
-    return localStorage.getItem('chika_enable_narrator') !== 'false';
+    return localStorage.getItem('AGAM_enable_narrator') !== 'false';
   });
   const [enableSfx, setEnableSfx] = useState<boolean>(() => {
-    return localStorage.getItem('chika_enable_sfx') !== 'false';
+    return localStorage.getItem('AGAM_enable_sfx') !== 'false';
   });
   const [enableBgm, setEnableBgm] = useState<boolean>(() => {
-    return localStorage.getItem('chika_enable_bgm') === 'true';
+    return localStorage.getItem('AGAM_enable_bgm') === 'true';
   });
   const [showAudioSettings, setShowAudioSettings] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,19 +56,19 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
 
   // Save settings to localStorage
   useEffect(() => {
-    localStorage.setItem('chika_is_muted', String(isMuted));
+    localStorage.setItem('AGAM_is_muted', String(isMuted));
   }, [isMuted]);
 
   useEffect(() => {
-    localStorage.setItem('chika_enable_narrator', String(enableNarrator));
+    localStorage.setItem('AGAM_enable_narrator', String(enableNarrator));
   }, [enableNarrator]);
 
   useEffect(() => {
-    localStorage.setItem('chika_enable_sfx', String(enableSfx));
+    localStorage.setItem('AGAM_enable_sfx', String(enableSfx));
   }, [enableSfx]);
 
   useEffect(() => {
-    localStorage.setItem('chika_enable_bgm', String(enableBgm));
+    localStorage.setItem('AGAM_enable_bgm', String(enableBgm));
   }, [enableBgm]);
 
   // Ambient Background Music Loop

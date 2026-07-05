@@ -1,4 +1,4 @@
-# Releasing Chika
+# Releasing AGAM
 
 Pushing a version tag (`v*`) triggers [`.github/workflows/release.yml`](.github/workflows/release.yml),
 which builds a **signed release AAB + APK** and publishes them on a GitHub Release. The AAB is what
@@ -13,8 +13,8 @@ you upload to the Google Play Console; the APK is for direct/sideload distributi
 
 ```bash
 keytool -genkeypair -v \
-  -keystore chika-release.jks \
-  -alias chika \
+  -keystore AGAM-release.jks \
+  -alias AGAM \
   -keyalg RSA -keysize 2048 -validity 10000
 ```
 
@@ -22,12 +22,12 @@ keytool -genkeypair -v \
 
 ```bash
 # macOS / Linux
-base64 -w0 chika-release.jks > keystore.b64
+base64 -w0 AGAM-release.jks > keystore.b64
 ```
 
 ```powershell
 # Windows PowerShell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("chika-release.jks")) | Set-Content -NoNewline keystore.b64
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("AGAM-release.jks")) | Set-Content -NoNewline keystore.b64
 ```
 
 ### 3. Add the GitHub repo secrets
@@ -38,7 +38,7 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 |---|---|
 | `KEYSTORE_BASE64` | contents of `keystore.b64` |
 | `KEYSTORE_PASSWORD` | the keystore password |
-| `KEY_ALIAS` | `chika` (the alias above) |
+| `KEY_ALIAS` | `AGAM` (the alias above) |
 | `KEY_PASSWORD` | the key password |
 
 Do **not** commit the keystore or `keystore.b64` to the repo.

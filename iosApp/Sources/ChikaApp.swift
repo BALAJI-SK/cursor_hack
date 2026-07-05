@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct ChikaApp: App {
+struct AGAMApp: App {
     var body: some Scene {
         WindowGroup {
             LibraryView()

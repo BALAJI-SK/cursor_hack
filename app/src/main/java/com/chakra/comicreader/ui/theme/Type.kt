@@ -30,7 +30,7 @@ private fun archivoFont(weight: FontWeight, axis: Int): Font =
     )
 
 /** Base typography: Archivo everywhere by default; Anton is applied explicitly where it belongs. */
-val ChikaTypography = Typography().run {
+val AGAMTypography = Typography().run {
     copy(
         displayLarge = displayLarge.copy(fontFamily = Anton),
         displayMedium = displayMedium.copy(fontFamily = Anton),

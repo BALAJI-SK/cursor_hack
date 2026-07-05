@@ -59,7 +59,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: chika-debug-apk
+          name: AGAM-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
@@ -135,19 +135,19 @@ jobs:
 
       - name: Build app (unsigned)
         run: |
-          xcodebuild -workspace iosApp/Chika.xcworkspace -scheme Chika -configuration Release \
+          xcodebuild -workspace iosApp/AGAM.xcworkspace -scheme AGAM -configuration Release \
             -sdk iphoneos -derivedDataPath iosApp/build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
 
       - name: Package IPA
         run: |
           mkdir -p Payload
-          cp -R "iosApp/build/Build/Products/Release-iphoneos/Chika.app" Payload/
-          zip -qry Chika-unsigned.ipa Payload
+          cp -R "iosApp/build/Build/Products/Release-iphoneos/AGAM.app" Payload/
+          zip -qry AGAM-unsigned.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: chika-ios-unsigned-ipa
-          path: Chika-unsigned.ipa
+          name: AGAM-ios-unsigned-ipa
+          path: AGAM-unsigned.ipa
           if-no-files-found: error

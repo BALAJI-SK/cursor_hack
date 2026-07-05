@@ -65,7 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chakra.comicreader.data.db.ComicEntity
-import com.chakra.comicreader.ui.brand.ChikaWordmark
+import com.chakra.comicreader.ui.brand.AGAMWordmark
 import com.chakra.comicreader.ui.brand.OchreBadge
 import com.chakra.comicreader.ui.brand.StarburstShape
 import com.chakra.comicreader.ui.brand.comicShadow
@@ -132,7 +132,7 @@ fun LibraryScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top,
                 ) {
-                    ChikaWordmark()
+                    AGAMWordmark()
                     Box(
                         Modifier
                             .size(36.dp)

@@ -1,15 +1,14 @@
 <p align="center">
-  <img src="docs/logo-lockup.png" width="420" alt="Chika · Chitra Katha">
+  <img src="docs/logo-lockup.png" width="420" alt="AGAM · Chitra Katha">
 </p>
 
 <p align="center">
-  <strong>Chika</strong> — a panel-by-panel comic reader for Android.<br>
-  Open a CBZ/CBR, and Chika finds the panels with an on-device ML model and guides you through them
-  one tap at a time.
-</p>
+  <strong>AGAM</strong> — a panel-by-panel comic reader for Android.<br>
+  Open a CBZ/CBR, and AGAM finds the panels with an on-device ML model and guides you through them
+  one tap at a time.</p>
 
 <p align="center">
-  <a href="https://github.com/batunii/chika/actions/workflows/ci.yml"><img src="https://github.com/batunii/chika/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/batunii/AGAM/actions/workflows/ci.yml"><img src="https://github.com/batunii/AGAM/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg" alt="License: MPL 2.0"></a>
   <img src="https://img.shields.io/badge/platform-Android%208.0%2B-3DDC84.svg" alt="Android 8.0+">
 </p>
@@ -40,7 +39,7 @@ swipe to turn whole pages, scrub pages, and flip reading direction (LTR/RTL).
   (clamped to the artwork), a page scrubber, a "show whole page" button, and an LTR/RTL toggle.
 - **Library** — import via the system file picker (copied into app storage), cover thumbnails,
   per-comic resume (page **and** panel), long-press to remove.
-- **Chika brand UI** — pulp-comic identity (Anton + Archivo type, ink/crimson/cream/ochre palette).
+- **AGAM brand UI** — pulp-comic identity (Anton + Archivo type, ink/crimson/cream/ochre palette).
 
 ## Build & run
 
@@ -92,7 +91,7 @@ targets) that `:app` consumes; it is the foundation for a future iOS app.
   detection      MlPanelDetector (TFLite) · whole-page fallback
   ui/reader      ReaderViewModel (page→panel state machine) + ReaderScreen (camera, gestures, chrome)
   ui/library     LibraryViewModel + LibraryScreen
-  ui/brand       Chika component kit (mark, reticle, halftone, starburst, page coin, wordmark)
+  ui/brand       AGAM component kit (mark, reticle, halftone, starburst, page coin, wordmark)
   ui/theme       palette + Anton/Archivo typography
 ```
 
@@ -101,11 +100,11 @@ Apache Commons Compress · 7-Zip-JBinding.
 
 ## License
 
-Chika's source is licensed under the **Mozilla Public License 2.0** — see [`LICENSE`](LICENSE).
+AGAM's source is licensed under the **Mozilla Public License 2.0** — see [`LICENSE`](LICENSE).
 
 Third-party libraries, the bundled model, fonts, and brand assets keep their own licenses; the full
 audit and obligations (including the **LGPL** 7-Zip component and **Manga109-s** model-data
-disclosure) are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). The **Chika / Chitra Katha**
+disclosure) are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). The **AGAM / Chitra Katha**
 name, logo, and brand assets are owned by Chakra (Chalchitra Krida) and are not covered by the code
 license.
 

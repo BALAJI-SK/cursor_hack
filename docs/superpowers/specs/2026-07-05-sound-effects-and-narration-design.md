@@ -7,7 +7,7 @@
 ---
 
 ## 1. Overview & Goals
-The goal of this feature is to turn Chika (Agam Katha Reader) into an immersive "motion-comic" reading experience. 
+The goal of this feature is to turn AGAM (Agam Katha Reader) into an immersive "motion-comic" reading experience. 
 As the user steps through panels:
 1. The app plays dynamic **Action Sound Effects** (like a sword slash, explosion, or laugh) matching the action in the panel.
 2. The app plays a high-quality **Voice-Over Narration** of the speech bubble dialogue.

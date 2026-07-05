@@ -3,7 +3,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Chika mark, ochre scheme: dark (ink) cells with maroon frames + crimson spine, on the
+    <!-- AGAM mark, ochre scheme: dark (ink) cells with maroon frames + crimson spine, on the
          ochre launcher background. -->
 
     <!-- top cell: maroon frame + ink fill -->

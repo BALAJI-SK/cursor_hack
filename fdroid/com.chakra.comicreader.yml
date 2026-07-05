@@ -1,5 +1,5 @@
 # F-Droid main-repo recipe TEMPLATE.
-# This file is NOT used by Chika's build. To submit Chika to the F-Droid main repo, copy this to
+# This file is NOT used by AGAM's build. To submit AGAM to the F-Droid main repo, copy this to
 # metadata/com.chakra.comicreader.yml in a fork of https://gitlab.com/fdroid/fdroiddata and open a
 # merge request. F-Droid maintainers will refine it. F-Droid builds assembleRelease (unsigned, since
 # the keystore env vars are absent) and signs the result with the F-Droid key.
@@ -8,12 +8,12 @@ Categories:
   - Reading
 License: MPL-2.0
 AuthorName: Chakra (Chalchitra Krida)
-WebSite: https://github.com/batunii/chika
-SourceCode: https://github.com/batunii/chika
-IssueTracker: https://github.com/batunii/chika/issues
+WebSite: https://github.com/batunii/AGAM
+SourceCode: https://github.com/batunii/AGAM
+IssueTracker: https://github.com/batunii/AGAM/issues
 
 RepoType: git
-Repo: https://github.com/batunii/chika.git
+Repo: https://github.com/batunii/AGAM.git
 
 Builds:
   - versionName: 0.1.1

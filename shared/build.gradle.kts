@@ -14,7 +14,7 @@ kotlin {
     }
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         target.binaries.framework {
-            baseName = "ChikaShared"
+            baseName = "AGAMShared"
             isStatic = true
         }
     }

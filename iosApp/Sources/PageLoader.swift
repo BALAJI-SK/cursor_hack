@@ -1,6 +1,6 @@
 import UIKit
 import ImageIO
-import ChikaShared
+import AGAMShared
 
 /// Decodes comic pages to UIImages, downsampling very large scans and keeping recently viewed pages
 /// hot in an LRU cache so back/forward navigation is instant and memory stays bounded.

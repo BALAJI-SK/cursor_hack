@@ -1,7 +1,7 @@
 import SwiftUI
-import ChikaShared
+import AGAMShared
 
-/// Panel-by-panel CBZ reader with Chika chrome: a branded header (back + title + issue), reticle
+/// Panel-by-panel CBZ reader with AGAM chrome: a branded header (back + title + issue), reticle
 /// brackets framing the page, the starburst page coin, and a "tap to step" hint — matching the
 /// Android reader. Tapping the right side steps page → panel 1 → … → next page; the left side steps
 /// back; panels come from the on-device Core ML detector via the shared decoder + planner, and the
@@ -16,8 +16,8 @@ struct ReaderView: View {
     }
 
     private static let detector = LiteRTPanelDetector()
-    private static let ioQueue = DispatchQueue(label: "chika.reader.io", qos: .userInitiated)
-    private static let detectQueue = DispatchQueue(label: "chika.reader.detect", qos: .userInitiated)
+    private static let ioQueue = DispatchQueue(label: "AGAM.reader.io", qos: .userInitiated)
+    private static let detectQueue = DispatchQueue(label: "AGAM.reader.detect", qos: .userInitiated)
 
     @Environment(\.dismiss) private var dismiss
     @State private var state: LoadState = .loading
@@ -33,8 +33,8 @@ struct ReaderView: View {
     // Detected panels cached per page (in the current reading direction) so back/forward and
     // prefetched pages don't re-run the detector. Cleared when the direction changes.
     @State private var panelCache: [Int: [Panel]] = [:]
-    // overlay all detected panels on the whole page; CHIKA_DEBUG_BOXES forces it on at launch (QA).
-    @State private var debugBoxes = ProcessInfo.processInfo.environment["CHIKA_DEBUG_BOXES"] != nil
+    // overlay all detected panels on the whole page; AGAM_DEBUG_BOXES forces it on at launch (QA).
+    @State private var debugBoxes = ProcessInfo.processInfo.environment["AGAM_DEBUG_BOXES"] != nil
     // Manual zoom/pan layered on top of the panel-framing camera (pinch to zoom, drag to pan).
     @State private var zoom: CGFloat = 1
     @State private var steadyZoom: CGFloat = 1
@@ -51,14 +51,14 @@ struct ReaderView: View {
 
     var body: some View {
         ZStack {
-            Chika.ink.ignoresSafeArea()
+            AGAM.ink.ignoresSafeArea()
             switch state {
             case .loading:
-                ProgressView().tint(Chika.ochre)
+                ProgressView().tint(AGAM.ochre)
             case .failed(let message):
                 VStack(spacing: 10) {
-                    Image(systemName: "exclamationmark.triangle").foregroundColor(Chika.ochre)
-                    Text(message).font(.archivo(14)).foregroundColor(Chika.cream)
+                    Image(systemName: "exclamationmark.triangle").foregroundColor(AGAM.ochre)
+                    Text(message).font(.archivo(14)).foregroundColor(AGAM.cream)
                         .multilineTextAlignment(.center)
                 }
                 .padding()
@@ -80,19 +80,19 @@ struct ReaderView: View {
             // Reading direction: this comic's saved choice, or the global default if never set.
             rightToLeft = ReadingProgress.readingDirection(comicURL)
             // QA hook: force a direction at launch (never set in production).
-            if let r = ProcessInfo.processInfo.environment["CHIKA_DEBUG_RTL"] { rightToLeft = (r == "1") }
+            if let r = ProcessInfo.processInfo.environment["AGAM_DEBUG_RTL"] { rightToLeft = (r == "1") }
             // Resume where we left off (page and panel), clamped to the current page count.
             if let saved = ReadingProgress.get(comicURL) {
                 page = min(max(saved.page, 0), pageCount - 1)
             }
             // QA hook: jump straight to a page (never set in production).
-            if let p = ProcessInfo.processInfo.environment["CHIKA_DEBUG_PAGE"], let pi = Int(p) {
+            if let p = ProcessInfo.processInfo.environment["AGAM_DEBUG_PAGE"], let pi = Int(p) {
                 page = min(max(pi, 0), pageCount - 1)
             }
             state = .ready(loader)
             // QA hook: start on a specific panel index (never set in production).
             var restore = ReadingProgress.get(comicURL)?.step ?? -1
-            if let s = ProcessInfo.processInfo.environment["CHIKA_DEBUG_STEP"], let si = Int(s) { restore = si }
+            if let s = ProcessInfo.processInfo.environment["AGAM_DEBUG_STEP"], let si = Int(s) { restore = si }
             loadPage(loader, restoreStep: restore)
         } catch {
             state = .failed("Could not open archive: \(error.localizedDescription)")
@@ -162,7 +162,7 @@ struct ReaderView: View {
                 if self.step >= found.count { self.step = found.count - 1 } // keep a restored panel in range
                 self.detecting = false
                 // QA hook: auto-split the current region once, to demonstrate the manual split.
-                if ProcessInfo.processInfo.environment["CHIKA_DEBUG_SPLIT"] != nil, self.step >= 0 {
+                if ProcessInfo.processInfo.environment["AGAM_DEBUG_SPLIT"] != nil, self.step >= 0 {
                     self.splitCurrentRegion()
                 }
             }
@@ -209,12 +209,12 @@ struct ReaderView: View {
                         .animation(.spring(response: 0.45, dampingFraction: 0.85), value: step)
                         .animation(.spring(response: 0.45, dampingFraction: 0.85), value: page)
                 } else {
-                    ProgressView().tint(Chika.ochre)
+                    ProgressView().tint(AGAM.ochre)
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .clipped()
-            .overlay { if showChrome { Reticle(color: Chika.cream, inset: 6) } }
+            .overlay { if showChrome { Reticle(color: AGAM.cream, inset: 6) } }
             .overlay {
                 // Debug: draw every planned panel box (in reading order) over the whole page, so a
                 // screenshot can be compared to Android to confirm detection parity.
@@ -294,13 +294,13 @@ struct ReaderView: View {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(Chika.cream)
+                    .foregroundColor(AGAM.cream)
                     .frame(width: 34, height: 34)
-                    .background(Chika.inkSoft)
+                    .background(AGAM.inkSoft)
                     .clipShape(RoundedCornerShape(cornerRadius: 3))
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text(title).font(.anton(15)).foregroundColor(Chika.cream).lineLimit(1)
+                Text(title).font(.anton(15)).foregroundColor(AGAM.cream).lineLimit(1)
                 HStack(spacing: 6) {
                     // "Whole page" signals the detection-confidence fallback (auto-pan off here).
                     KickerText(detecting ? "Detecting…" : (regions.count <= 1 ? "Whole page" : "Reading"), size: 8)
@@ -311,9 +311,9 @@ struct ReaderView: View {
             Button { withAnimation(.spring(response: 0.4)) { splitCurrentRegion() } } label: {
                 Image(systemName: "rectangle.split.2x1")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(step >= 0 ? Chika.cream : Chika.creamMuted)
+                    .foregroundColor(step >= 0 ? AGAM.cream : AGAM.creamMuted)
                     .frame(width: 34, height: 34)
-                    .background(Chika.inkSoft)
+                    .background(AGAM.inkSoft)
                     .clipShape(RoundedCornerShape(cornerRadius: 3))
             }
             .disabled(step < 0)
@@ -321,9 +321,9 @@ struct ReaderView: View {
             Button { debugBoxes.toggle() } label: {
                 Image(systemName: debugBoxes ? "square.dashed.inset.filled" : "square.dashed")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(debugBoxes ? Chika.ochre : Chika.cream)
+                    .foregroundColor(debugBoxes ? AGAM.ochre : AGAM.cream)
                     .frame(width: 34, height: 34)
-                    .background(Chika.inkSoft)
+                    .background(AGAM.inkSoft)
                     .clipShape(RoundedCornerShape(cornerRadius: 3))
             }
             Button(rightToLeft ? "RTL" : "LTR") {
@@ -331,13 +331,13 @@ struct ReaderView: View {
                 panelCache.removeAll() // panels are ordered per-direction; re-detect under the new one
                 persist(); redetect()
             }
-                .font(.archivo(12)).foregroundColor(Chika.ink)
+                .font(.archivo(12)).foregroundColor(AGAM.ink)
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .background(Chika.ochre)
+                .background(AGAM.ochre)
                 .clipShape(RoundedCornerShape(cornerRadius: 3))
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(Chika.ink.opacity(0.7))
+        .background(AGAM.ink.opacity(0.7))
     }
 
     private var bottomBar: some View {
@@ -351,7 +351,7 @@ struct ReaderView: View {
                     ),
                     in: 0...Double(max(pageCount - 1, 1)), step: 1
                 )
-                .tint(Chika.ochre)
+                .tint(AGAM.ochre)
                 .frame(width: 180)
             }
             Spacer()
@@ -362,9 +362,9 @@ struct ReaderView: View {
                         .font(.system(size: 12, weight: .bold))
                     Text("\(Int((fill * 100).rounded()))").font(.archivo(9))
                 }
-                .foregroundColor(Chika.cream)
+                .foregroundColor(AGAM.cream)
                 .frame(width: 38, height: 38)
-                .background(Chika.inkSoft)
+                .background(AGAM.inkSoft)
                 .clipShape(RoundedCornerShape(cornerRadius: 3))
             }
             .padding(.trailing, 8)

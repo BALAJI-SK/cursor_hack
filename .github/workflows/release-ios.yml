@@ -46,33 +46,33 @@ jobs:
 
       - name: Build app (unsigned)
         run: |
-          xcodebuild -workspace iosApp/Chika.xcworkspace -scheme Chika -configuration Release \
+          xcodebuild -workspace iosApp/AGAM.xcworkspace -scheme AGAM -configuration Release \
             -sdk iphoneos -derivedDataPath iosApp/build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
 
       - name: Package IPA
         run: |
           mkdir -p Payload
-          cp -R "iosApp/build/Build/Products/Release-iphoneos/Chika.app" Payload/
-          zip -qry Chika-unsigned.ipa Payload
+          cp -R "iosApp/build/Build/Products/Release-iphoneos/AGAM.app" Payload/
+          zip -qry AGAM-unsigned.ipa Payload
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: Chika-unsigned.ipa
+          files: AGAM-unsigned.ipa
           fail_on_unmatched_files: true
           body: |
-            ## Chika for iOS — unsigned build
+            ## AGAM for iOS — unsigned build
 
             Panel-by-panel comic reader. This IPA is **unsigned**: you sign it at install
             time with your own (free) Apple ID — no Apple Developer Program required.
 
             ### Install
-            1. Download `Chika-unsigned.ipa` below.
+            1. Download `AGAM-unsigned.ipa` below.
             2. Install it with **[AltStore](https://altstore.io)** or **[Sideloadly](https://sideloadly.io)**,
                entering your Apple ID when prompted (it signs the app for your device).
             3. On the iPhone: **Settings → General → VPN & Device Management** → trust your Apple ID;
                then **Settings → Privacy & Security → Developer Mode** → on, and restart.
-            4. Open **Chika**, tap **+** to import a CBZ/CBR from Files, and read.
+            4. Open **AGAM**, tap **+** to import a CBZ/CBR from Files, and read.
 
             > Apps signed with a free Apple ID expire after 7 days — reconnect and re-install to refresh.

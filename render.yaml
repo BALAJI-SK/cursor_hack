@@ -1,7 +1,7 @@
 services:
   # FastAPI Backend Service
   - type: web
-    name: chika-backend-sk
+    name: AGAM-backend-sk
     env: docker
     dockerfilePath: server/Dockerfile
     dockerContext: server
@@ -10,16 +10,16 @@ services:
       - key: PYTHONUNBUFFERED
         value: "1"
     disk:
-      name: chika-storage
+      name: AGAM-storage
       mountPath: /app/uploads
       sizeGB: 10
 
   # React Static Frontend
   - type: web
-    name: chika-frontend-sk
+    name: AGAM-frontend-sk
     env: static
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: "https://chika-backend-sk.onrender.com"
+        value: "https://AGAM-backend-sk.onrender.com"

@@ -1,6 +1,6 @@
 import Foundation
 import ZIPFoundation
-import ChikaShared
+import AGAMShared
 
 /// Converts an imported CBR/RAR archive to CBZ once, on import, so the reader only ever handles
 /// plain ZIP. Reading uses libarchive's BSD-licensed RAR5 reader (CbrReader); image filtering and

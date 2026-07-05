@@ -36,7 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.chakra.comicreader.ui.brand.ChikaWordmark
+import com.chakra.comicreader.ui.brand.AGAMWordmark
 import com.chakra.comicreader.ui.brand.OchreBadge
 import com.chakra.comicreader.ui.brand.comicShadow
 import com.chakra.comicreader.ui.brand.halftone
@@ -115,7 +115,7 @@ fun MenuScreen(
             // ---- About ---------------------------------------------------------------
             SectionLabel("ABOUT")
             Spacer(Modifier.size(16.dp))
-            ChikaWordmark()
+            AGAMWordmark()
             Spacer(Modifier.size(12.dp))
             OchreBadge("VERSION $version")
             Spacer(Modifier.size(14.dp))
@@ -128,7 +128,7 @@ fun MenuScreen(
             )
             Spacer(Modifier.size(18.dp))
             Text(
-                "Chika is a comic reader that detects panels on-device and guides you through each " +
+                "AGAM is a comic reader that detects panels on-device and guides you through each " +
                     "page, panel by panel.",
                 fontFamily = Archivo,
                 fontWeight = FontWeight.Medium,
@@ -141,7 +141,7 @@ fun MenuScreen(
 
             // ---- Support -------------------------------------------------------------
             Text(
-                "Chika is free and made with care. If it brings you joy, you can support its making.",
+                "AGAM is free and made with care. If it brings you joy, you can support its making.",
                 fontFamily = Archivo,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,

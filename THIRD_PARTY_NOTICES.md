@@ -1,8 +1,8 @@
 # Third-Party Notices
 
-Chika (the application source) is licensed under the **Mozilla Public License 2.0** — see
+AGAM (the application source) is licensed under the **Mozilla Public License 2.0** — see
 [`LICENSE`](LICENSE). This file documents the third-party software, models, fonts, and data that
-Chika depends on or bundles, along with the obligations each imposes. Full license texts are in
+AGAM depends on or bundles, along with the obligations each imposes. Full license texts are in
 [`THIRD_PARTY_LICENSES/`](THIRD_PARTY_LICENSES).
 
 ## Summary of obligations
@@ -17,7 +17,7 @@ Chika depends on or bundles, along with the obligations each imposes. Full licen
 | Anton font | OFL-1.1 | yes (asset) | Keep OFL text; don't sell font alone |
 | Archivo font | OFL-1.1 | yes (asset) | Keep OFL text; don't sell font alone |
 
-MPL-2.0 (Chika) is compatible with all of the above, including the LGPL component (MPL-2.0 §3.3).
+MPL-2.0 (AGAM) is compatible with all of the above, including the LGPL component (MPL-2.0 §3.3).
 
 ## Dependencies
 
@@ -42,7 +42,7 @@ licensed **GNU LGPL 2.1**, with a portion under **LGPL + the unRAR license restr
 files under BSD.
 
 - **unRAR restriction:** the unRAR source may not be used to *re-create the RAR compression
-  algorithm*. Chika only **decompresses/reads** RAR archives, which is permitted.
+  algorithm*. AGAM only **decompresses/reads** RAR archives, which is permitted.
 - **LGPL compliance:** the library ships as a dynamically-loaded native library (`.so`) that a user
   could replace, satisfying LGPL §6 even when combined with the MPL-licensed application. We retain
   the LGPL text and this attribution, and point to the upstream source above. If you distribute a
@@ -65,7 +65,7 @@ Full texts: [`THIRD_PARTY_LICENSES/OFL-1.1-Anton.txt`](THIRD_PARTY_LICENSES/OFL-
   model's outputs is permitted provided dataset usage is disclosed — **this notice constitutes that
   disclosure**. See http://www.manga109.org/ for dataset terms.
 - The model was produced with Ultralytics YOLO tooling; the distributed weights are licensed
-  Apache-2.0 by their author, which is the basis on which Chika redistributes them.
+  Apache-2.0 by their author, which is the basis on which AGAM redistributes them.
 - **Licensing caveat (to resolve before any commercial release):** the upstream weights are labelled
   Apache-2.0, but because they are **trained on Manga109-s** (an academic/research dataset), some
   readings — e.g. the CoMix project's license, which labels Manga109-trained weights CC BY-NC-SA 4.0
@@ -76,7 +76,7 @@ Full texts: [`THIRD_PARTY_LICENSES/OFL-1.1-Anton.txt`](THIRD_PARTY_LICENSES/OFL-
 
 ## Brand assets
 
-The **Chika / Chitra Katha** name, logo, and wordmark are brand assets owned by the project owner
+The **AGAM / Chitra Katha** name, logo, and wordmark are brand assets owned by the project owner
 (Chakra / Chalchitra Krida) and are **not** covered by the MPL-2.0 code license. Trademark/brand
 rights are reserved even where the surrounding source is open.
 
@@ -84,6 +84,6 @@ rights are reserved even where the surrounding source is open.
 
 - **Google Play / Apple App Store:** MPL-2.0 is compatible with both stores. (A strong-copyleft
   license such as GPL would not be App-Store compatible — one reason MPL-2.0 was chosen.)
-- **F-Droid:** Chika bundles **prebuilt** native libraries (7-Zip-JBinding, TensorFlow Lite) and a
+- **F-Droid:** AGAM bundles **prebuilt** native libraries (7-Zip-JBinding, TensorFlow Lite) and a
   **prebuilt model** asset, pulled from trusted Maven repos (JitPack / Google Maven). These are
   free-licensed and permitted, though F-Droid may flag the prebuilt model blob.

@@ -1,6 +1,6 @@
 import Foundation
 import ZIPFoundation
-import ChikaShared
+import AGAMShared
 
 /// iOS CBZ implementation of the comic-archive contract. Entry filtering (isImageEntry) and page
 /// ordering (NaturalOrderComparator) come from the shared Kotlin core so iOS and Android agree on

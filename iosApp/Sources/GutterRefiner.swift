@@ -1,5 +1,5 @@
 import UIKit
-import ChikaShared
+import AGAMShared
 
 /// Refines ML-detected panel boxes by splitting any box that still contains a clear interior
 /// "gutter" — the blank channel between bordered comic panels — recovering panels the detector

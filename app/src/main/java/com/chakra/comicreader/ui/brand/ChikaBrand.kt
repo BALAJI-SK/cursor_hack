@@ -117,7 +117,7 @@ fun Reticle(
 
 /** "CHI·KA / AGAM KATHA" lockup (cream + crimson Anton over an Archivo kicker). */
 @Composable
-fun ChikaWordmark(modifier: Modifier = Modifier) {
+fun AGAMWordmark(modifier: Modifier = Modifier) {
     Column(modifier) {
         Text(
             text = buildAnnotatedString {

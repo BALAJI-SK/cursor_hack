@@ -1,4 +1,4 @@
-# Chika panel-detector training
+# AGAM panel-detector training
 
 Train a replacement for the bundled `manga_panel_detector_int8.tflite` on **diverse** data so it
 works on color/Western comics *and* manga — fixing the root cause (the current model is trained
@@ -39,13 +39,13 @@ Both write into `dataset/images/{train,val}` + `dataset/labels/{train,val}` (pan
 ## Step 3 — train on MPS
 ```bash
 python scripts/train.py --dataset dataset --model yolo11n.pt --epochs 100 --batch 16
-# best weights → runs/detect/chika_panels/weights/best.pt
+# best weights → runs/detect/AGAM_panels/weights/best.pt
 ```
 Heavy color augmentation (HSV/mosaic/mixup) is on by default — it's what bridges B&W↔color.
 
 ## Step 4 — export the tflite
 ```bash
-python scripts/export_tflite.py --weights runs/detect/chika_panels/weights/best.pt \
+python scripts/export_tflite.py --weights runs/detect/AGAM_panels/weights/best.pt \
   --out manga_panel_detector_int8.tflite
 ```
 
@@ -54,7 +54,7 @@ python scripts/export_tflite.py --weights runs/detect/chika_panels/weights/best.
 cp manga_panel_detector_int8.tflite ../iosApp/Sources/manga_panel_detector_int8.tflite
 # rebuild the iOS app; the shared decoder consumes [1,N,6] unchanged.
 ```
-Then sanity-check in the simulator with the debug overlay (see `chika-ios-test-loop` memory).
+Then sanity-check in the simulator with the debug overlay (see `AGAM-ios-test-loop` memory).
 
 ## Honest expectations
 - **Will improve a lot:** color/Western comics (Batman), clean manga grids.

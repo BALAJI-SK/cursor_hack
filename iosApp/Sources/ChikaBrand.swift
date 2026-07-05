@@ -1,10 +1,10 @@
 import SwiftUI
 
-// MARK: - Signature texture & motifs (ported from ChikaBrand.kt)
+// MARK: - Signature texture & motifs (ported from AGAMBrand.kt)
 
 /// Low-opacity halftone dot wash drawn behind content. Keep alpha subtle (0.05–0.22).
 struct Halftone: View {
-    var color: Color = Chika.ink
+    var color: Color = AGAM.ink
     var alpha: Double = 0.06
     var spacing: CGFloat = 9
     var radius: CGFloat = 1.6
@@ -28,7 +28,7 @@ struct Halftone: View {
 
 extension View {
     /// Halftone dot wash layered behind the view.
-    func halftone(color: Color = Chika.ink, alpha: Double = 0.06) -> some View {
+    func halftone(color: Color = AGAM.ink, alpha: Double = 0.06) -> some View {
         background(Halftone(color: color, alpha: alpha))
     }
 
@@ -66,7 +66,7 @@ struct StarburstShape: Shape {
 
 /// Four L-shaped reticle corner brackets, drawn as an overlay.
 struct Reticle: View {
-    var color: Color = Chika.cream
+    var color: Color = AGAM.cream
     var inset: CGFloat = 8
     var length: CGFloat = 14
     var stroke: CGFloat = 2.5
@@ -89,11 +89,11 @@ struct Reticle: View {
 
 // MARK: - Logo system
 
-/// The Chika three-panel "C" mark on its maroon ground, with a hard drop shadow.
-struct ChikaMark: View {
+/// The AGAM three-panel "C" mark on its maroon ground, with a hard drop shadow.
+struct AGAMMark: View {
     var size: CGFloat
     var body: some View {
-        Image("ChikaMark")
+        Image("AGAMMark")
             .resizable()
             .frame(width: size, height: size)
             .clipShape(RoundedRectangle(cornerRadius: size * 0.22))
@@ -102,10 +102,10 @@ struct ChikaMark: View {
 }
 
 /// "CHI·KA / AGAM KATHA" lockup (cream + crimson Anton over an Archivo kicker).
-struct ChikaWordmark: View {
+struct AGAMWordmark: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            (Text("CHI").foregroundColor(Chika.cream) + Text("KA").foregroundColor(Chika.crimson))
+            (Text("CHI").foregroundColor(AGAM.cream) + Text("KA").foregroundColor(AGAM.crimson))
                 .font(.anton(28))
             KickerText("Agam Katha", size: 8.5)
                 .tracking(2.6)
@@ -120,11 +120,11 @@ struct OchreBadge: View {
         Text(text.uppercased())
             .font(.anton(15))
             .tracking(0.6)
-            .foregroundColor(Chika.ink)
+            .foregroundColor(AGAM.ink)
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .background(Chika.ochre)
-            .overlay(RoundedRectangle(cornerRadius: 3).stroke(Chika.ink, lineWidth: 2.5))
+            .background(AGAM.ochre)
+            .overlay(RoundedRectangle(cornerRadius: 3).stroke(AGAM.ink, lineWidth: 2.5))
             .clipShape(RoundedRectangle(cornerRadius: 3))
             .comicShadow(offset: 3, color: .black.opacity(0.6), corner: 3)
             .rotationEffect(.degrees(-1.5))
@@ -138,11 +138,11 @@ struct PageCoin: View {
     var size: CGFloat = 58
     var body: some View {
         ZStack {
-            StarburstShape().fill(Chika.ink).frame(width: size, height: size)
-            StarburstShape().fill(Chika.ochre).frame(width: size - 6, height: size - 6)
+            StarburstShape().fill(AGAM.ink).frame(width: size, height: size)
+            StarburstShape().fill(AGAM.ochre).frame(width: size - 6, height: size - 6)
             VStack(spacing: -7) {
-                Text("\(page)").font(.anton(20)).foregroundColor(Chika.ink)
-                Text("\(total)").font(.anton(9)).foregroundColor(Chika.ink.opacity(0.75))
+                Text("\(page)").font(.anton(20)).foregroundColor(AGAM.ink)
+                Text("\(total)").font(.anton(9)).foregroundColor(AGAM.ink.opacity(0.75))
             }
         }
         .frame(width: size, height: size)

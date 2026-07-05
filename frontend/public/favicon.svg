@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Retro Comic Bubble -->
+  <rect x="5" y="5" width="90" height="70" rx="15" fill="#FAF6EE" stroke="#1C1917" stroke-width="8"/>
+  <!-- Speech pointer -->
+  <polygon points="30,72 50,72 35,92" fill="#FAF6EE" stroke="#1C1917" stroke-width="8" stroke-linejoin="round"/>
+  <!-- Inner cover for clean pointer seam -->
+  <polygon points="33,70 47,70 35,85" fill="#FAF6EE"/>
+  <!-- Letter 'A' for Agam -->
+  <text x="50" y="48" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="46" fill="#C81E2E" text-anchor="middle" dominant-baseline="middle">A</text>
+</svg>

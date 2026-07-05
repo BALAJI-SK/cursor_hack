@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, SyntheticEvent } from 'react';
-import { ArrowLeft, ArrowLeftRight, Eye } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, Eye, Volume2, VolumeX, Settings } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -8,6 +8,8 @@ interface PanelRect {
   top: number;
   right: number;
   bottom: number;
+  audioUrl?: string | null;
+  sfxUrl?: string | null;
 }
 
 export default function Reader({ comicId, onBack }: { comicId: string; onBack: () => void }) {
@@ -18,6 +20,96 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
   const [rtl, setRtl] = useState(false);
   const [showWhole, setShowWhole] = useState(false);
   const [loadingPanels, setLoadingPanels] = useState(false);
+
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    return localStorage.getItem('chika_is_muted') === 'true';
+  });
+  const [enableNarrator, setEnableNarrator] = useState<boolean>(() => {
+    return localStorage.getItem('chika_enable_narrator') !== 'false';
+  });
+  const [enableSfx, setEnableSfx] = useState<boolean>(() => {
+    return localStorage.getItem('chika_enable_sfx') !== 'false';
+  });
+  const [showAudioSettings, setShowAudioSettings] = useState(false);
+
+  // Audio refs
+  const sfxAudioRef = useRef<HTMLAudioElement | null>(null);
+  const dialogueAudioRef = useRef<HTMLAudioElement | null>(null);
+  const dialogueTimeoutRef = useRef<any>(null);
+
+  // Save settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('chika_is_muted', String(isMuted));
+  }, [isMuted]);
+
+  useEffect(() => {
+    localStorage.setItem('chika_enable_narrator', String(enableNarrator));
+  }, [enableNarrator]);
+
+  useEffect(() => {
+    localStorage.setItem('chika_enable_sfx', String(enableSfx));
+  }, [enableSfx]);
+
+  // Audio Manager Playback Orchestration
+  useEffect(() => {
+    // Stop any active audio playbacks immediately to prevent overlap
+    if (sfxAudioRef.current) {
+      sfxAudioRef.current.pause();
+      sfxAudioRef.current = null;
+    }
+    if (dialogueAudioRef.current) {
+      dialogueAudioRef.current.pause();
+      dialogueAudioRef.current = null;
+    }
+    if (dialogueTimeoutRef.current) {
+      clearTimeout(dialogueTimeoutRef.current);
+      dialogueTimeoutRef.current = null;
+    }
+
+    if (isMuted) return;
+
+    const p = panels[slot - 1];
+    if (!p) return;
+
+    // Start playing the SFX audio file if present and enabled
+    if (p.sfxUrl && enableSfx) {
+      const sfx = new Audio(API_URL + p.sfxUrl);
+      sfxAudioRef.current = sfx;
+      sfx.play().catch((err) => {
+        console.warn("Failed to play SFX audio:", err);
+      });
+    }
+
+    // Schedule playing the dialogue narration audio if present and enabled
+    if (p.audioUrl && enableNarrator) {
+      const playDialogue = () => {
+        const audio = new Audio(API_URL + p.audioUrl);
+        dialogueAudioRef.current = audio;
+        audio.play().catch((err) => {
+          console.warn("Failed to play dialogue audio:", err);
+        });
+      };
+
+      if (p.sfxUrl && enableSfx) {
+        dialogueTimeoutRef.current = setTimeout(playDialogue, 300);
+      } else {
+        playDialogue();
+      }
+    }
+
+    // Cleanup active audios on unmount or before next run
+    return () => {
+      if (sfxAudioRef.current) {
+        sfxAudioRef.current.pause();
+      }
+      if (dialogueAudioRef.current) {
+        dialogueAudioRef.current.pause();
+      }
+      if (dialogueTimeoutRef.current) {
+        clearTimeout(dialogueTimeoutRef.current);
+      }
+    };
+  }, [slot, page, panels, isMuted, enableNarrator, enableSfx]);
 
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
@@ -232,6 +324,94 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button 
+            onClick={() => setIsMuted(!isMuted)} 
+            className="retro-button" 
+            style={{ 
+              padding: '0.35rem 0.75rem', 
+              background: isMuted ? 'var(--crimson)' : 'var(--bg-cream)', 
+              color: isMuted ? 'white' : 'var(--text-ink)', 
+              boxShadow: '2px 2px 0px var(--border-ink)', 
+              border: '2px solid var(--border-ink)' 
+            }}
+            title={isMuted ? "Unmute sound" : "Mute sound"}
+          >
+            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            {isMuted ? "MUTED" : "SOUND ON"}
+          </button>
+          
+          <div 
+            onMouseEnter={() => setShowAudioSettings(true)}
+            onMouseLeave={() => setShowAudioSettings(false)}
+            style={{ position: 'relative' }}
+          >
+            <button 
+              onClick={() => setShowAudioSettings(!showAudioSettings)} 
+              className="retro-button" 
+              style={{ 
+                padding: '0.35rem 0.75rem', 
+                background: 'var(--bg-cream)', 
+                color: 'var(--text-ink)', 
+                boxShadow: '2px 2px 0px var(--border-ink)', 
+                border: '2px solid var(--border-ink)' 
+              }}
+              title="Audio Settings"
+            >
+              <Settings size={16} />
+              AUDIO
+            </button>
+            {showAudioSettings && (
+              <div 
+                className="glass-controls title-font"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  minWidth: '180px',
+                  padding: '0.75rem',
+                  zIndex: 50,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.6rem',
+                  color: 'var(--bg-cream)',
+                  fontSize: '0.85rem',
+                  letterSpacing: '1px'
+                }}
+              >
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={enableNarrator} 
+                    onChange={(e) => setEnableNarrator(e.target.checked)}
+                    style={{ 
+                      cursor: 'pointer',
+                      accentColor: 'var(--crimson)',
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid var(--border-ink)'
+                    }}
+                  />
+                  Narrator Voice
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={enableSfx} 
+                    onChange={(e) => setEnableSfx(e.target.checked)}
+                    style={{ 
+                      cursor: 'pointer',
+                      accentColor: 'var(--crimson)',
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid var(--border-ink)'
+                    }}
+                  />
+                  SFX Sounds
+                </label>
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={() => setRtl(!rtl)} 
             className="retro-button" 

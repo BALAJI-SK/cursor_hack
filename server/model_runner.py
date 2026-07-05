@@ -8,8 +8,19 @@ import threading
 
 class ModelRunner:
     def __init__(self, model_path: str):
-        self.interpreter = tflite.Interpreter(model_path=model_path)
-        self.interpreter.allocate_tensors()
+        import os
+        model_path = os.path.abspath(model_path)
+        print(f"[DEBUG] ModelRunner loading model from absolute path: {model_path}")
+        try:
+            self.interpreter = tflite.Interpreter(model_path=model_path)
+            self.interpreter.allocate_tensors()
+        except Exception as e:
+            print(f"[ERROR] Failed to load interpreter: {e}")
+            if os.path.exists(model_path):
+                print(f"[DEBUG] File size: {os.path.getsize(model_path)} bytes")
+            else:
+                print(f"[DEBUG] File does not exist at absolute path!")
+            raise
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
         self.lock = threading.Lock()

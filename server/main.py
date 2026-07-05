@@ -55,7 +55,8 @@ decoder = YoloPanelDecoder()
 
 nvidia_api_key = os.getenv("NVIDIA_API_KEY", "")
 eleven_api_key = os.getenv("ELEVEN_API_KEY", "")
-nvidia_client = NvidiaVlmClient(api_key=nvidia_api_key)
+nvidia_model = os.getenv("NVIDIA_VLM_MODEL", "meta/llama-3.2-11b-vision-instruct")
+nvidia_client = NvidiaVlmClient(api_key=nvidia_api_key, model=nvidia_model)
 audio_generator = AudioGenerator(api_key=eleven_api_key)
 
 def process_comic_background(comic_id: str, file_path: str):

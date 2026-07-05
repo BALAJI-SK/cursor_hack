@@ -3,8 +3,9 @@ import base64
 import json
 
 class NvidiaVlmClient:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model: str = "meta/llama-3.2-11b-vision-instruct"):
         self.api_key = api_key
+        self.model = model
         self.url = "https://integrate.api.nvidia.com/v1/chat/completions"
 
     def analyze_panel(self, image_bytes: bytes) -> dict:
@@ -18,7 +19,7 @@ class NvidiaVlmClient:
         }
         
         payload = {
-            "model": "meta/llama-3.2-11b-vision-instruct",
+            "model": self.model,
             "messages": [
                 {
                     "role": "user",

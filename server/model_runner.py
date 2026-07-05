@@ -1,9 +1,12 @@
 import numpy as np
 from PIL import Image
 try:
-    import tflite_runtime.interpreter as tflite
+    import ai_edge_litert.interpreter as tflite
 except ImportError:
-    import tensorflow.lite as tflite
+    try:
+        import tflite_runtime.interpreter as tflite
+    except ImportError:
+        import tensorflow.lite as tflite
 import threading
 
 class ModelRunner:

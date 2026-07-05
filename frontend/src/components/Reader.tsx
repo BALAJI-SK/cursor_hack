@@ -30,6 +30,9 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
   const [enableSfx, setEnableSfx] = useState<boolean>(() => {
     return localStorage.getItem('chika_enable_sfx') !== 'false';
   });
+  const [enableBgm, setEnableBgm] = useState<boolean>(() => {
+    return localStorage.getItem('chika_enable_bgm') === 'true';
+  });
   const [showAudioSettings, setShowAudioSettings] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +52,7 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
   const sfxAudioRef = useRef<HTMLAudioElement | null>(null);
   const dialogueAudioRef = useRef<HTMLAudioElement | null>(null);
   const dialogueTimeoutRef = useRef<any>(null);
+  const bgmAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Save settings to localStorage
   useEffect(() => {
@@ -62,6 +66,35 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
   useEffect(() => {
     localStorage.setItem('chika_enable_sfx', String(enableSfx));
   }, [enableSfx]);
+
+  useEffect(() => {
+    localStorage.setItem('chika_enable_bgm', String(enableBgm));
+  }, [enableBgm]);
+
+  // Ambient Background Music Loop
+  useEffect(() => {
+    if (!isMuted && enableBgm) {
+      if (!bgmAudioRef.current) {
+        const audio = new Audio('/bgm.mp3');
+        audio.loop = true;
+        audio.volume = 0.15; // Low background volume
+        bgmAudioRef.current = audio;
+      }
+      bgmAudioRef.current.play().catch((err) => {
+        console.warn("Failed to play background music:", err);
+      });
+    } else {
+      if (bgmAudioRef.current) {
+        bgmAudioRef.current.pause();
+      }
+    }
+
+    return () => {
+      if (bgmAudioRef.current) {
+        bgmAudioRef.current.pause();
+      }
+    };
+  }, [isMuted, enableBgm]);
 
   // Audio Manager Playback Orchestration
   useEffect(() => {
@@ -425,6 +458,21 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
                     }}
                   />
                   SFX Sounds
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={enableBgm} 
+                    onChange={(e) => setEnableBgm(e.target.checked)}
+                    style={{ 
+                      cursor: 'pointer',
+                      accentColor: 'var(--crimson)',
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid var(--border-ink)'
+                    }}
+                  />
+                  Background Music
                 </label>
               </div>
             )}

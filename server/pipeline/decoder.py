@@ -9,6 +9,17 @@ class YoloPanelDecoder:
         self.min_area = min_area_fraction * 640 * 640
 
     def decode(self, raw: np.ndarray, lb: dict) -> dict:
+        # Detect coordinate scale: if maximum coordinate is <= 1.5, coordinates are normalized,
+        # so we scale them up to the model input size (640) for NMS and area checks.
+        max_coord = 0.0
+        for i in range(raw.shape[0]):
+            for j in range(4):
+                val = abs(raw[i, j])
+                if val > max_coord:
+                    max_coord = val
+        coord_scale = 640.0 if max_coord <= 1.5 else 1.0
+        print(f"[DEBUG] max_coord: {max_coord:.3f}, coord_scale: {coord_scale}")
+
         panels_raw = []
         bubbles_raw = []
 
@@ -25,7 +36,8 @@ class YoloPanelDecoder:
             if score < thresh:
                 continue
             
-            box = raw[i, 0:5] # x1, y1, x2, y2, score
+            box = raw[i, 0:5].copy() # x1, y1, x2, y2, score
+            box[0:4] = box[0:4] * coord_scale
             if cls == 0:
                 panels_raw.append(box)
             elif cls == 1:

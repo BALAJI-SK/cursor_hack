@@ -4,6 +4,7 @@ services:
     name: chika-backend-sk
     env: docker
     dockerfilePath: server/Dockerfile
+    dockerContext: server
     plan: starter  # Starter plan supports persistent disk storage (uses your credits, ~$7/month)
     envVars:
       - key: PYTHONUNBUFFERED

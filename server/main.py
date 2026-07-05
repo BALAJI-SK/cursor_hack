@@ -1,9 +1,9 @@
 import os
 import uuid
 import io
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
 from PIL import Image
 
 from database import init_db, get_db_connection
@@ -11,6 +11,8 @@ from archive_manager import ArchiveManager
 from model_runner import ModelRunner
 from pipeline.decoder import YoloPanelDecoder
 from pipeline.pipeline import PanelPipeline
+from pipeline.nvidia_client import NvidiaVlmClient
+from pipeline.audio_generator import AudioGenerator
 
 init_db()
 
@@ -51,6 +53,35 @@ if model_path is None:
 model_runner = ModelRunner(model_path)
 decoder = YoloPanelDecoder()
 
+nvidia_api_key = os.getenv("NVIDIA_API_KEY", "")
+eleven_api_key = os.getenv("ELEVEN_API_KEY", "")
+nvidia_client = NvidiaVlmClient(api_key=nvidia_api_key)
+audio_generator = AudioGenerator(api_key=eleven_api_key)
+
+def process_comic_background(comic_id: str, file_path: str):
+    try:
+        pages = archive_manager.list_pages(file_path)
+        conn = get_db_connection()
+        for idx, page_name in enumerate(pages):
+            page_bytes = archive_manager.extract_page(file_path, page_name)
+            img = Image.open(io.BytesIO(page_bytes))
+            # Call process_page from pipeline
+            from pipeline.pipeline import process_page
+            process_page(
+                comic_id=comic_id,
+                page_number=idx,
+                img=img,
+                model_runner=model_runner,
+                decoder=decoder,
+                nvidia_client=nvidia_client,
+                audio_generator=audio_generator,
+                db_conn=conn,
+                rtl=False
+            )
+        conn.close()
+    except Exception as e:
+        print(f"[ERROR] Background processing failed for comic {comic_id}: {e}")
+
 @app.get("/api/comics")
 def get_comics():
     conn = get_db_connection()
@@ -69,7 +100,7 @@ def get_comics():
     ]
 
 @app.post("/api/comics/import")
-async def import_comic(file: UploadFile = File(...)):
+async def import_comic(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     comic_id = str(uuid.uuid4())
     file_path = f"uploads/{comic_id}_{file.filename}"
     
@@ -90,6 +121,10 @@ async def import_comic(file: UploadFile = File(...)):
     )
     conn.commit()
     conn.close()
+    
+    if background_tasks:
+        background_tasks.add_task(process_comic_background, comic_id, file_path)
+        
     return {"id": comic_id}
 
 @app.delete("/api/comics/{comic_id}")
@@ -152,12 +187,13 @@ def get_panels(comic_id: str, page_num: int, rtl: bool = False):
     cursor = conn.cursor()
     cursor.execute("SELECT file_path FROM comics WHERE id = ?", (comic_id,))
     row = cursor.fetchone()
-    conn.close()
     if not row:
+        conn.close()
         raise HTTPException(status_code=404, detail="Comic not found")
     
     pages = archive_manager.list_pages(row[0])
     if page_num < 0 or page_num >= len(pages):
+        conn.close()
         raise HTTPException(status_code=404, detail="Page index out of bounds")
         
     page_bytes = archive_manager.extract_page(row[0], pages[page_num])
@@ -167,7 +203,53 @@ def get_panels(comic_id: str, page_num: int, rtl: bool = False):
     raw_out, lb = model_runner.run_inference(img)
     decoded = decoder.decode(raw_out[0], lb)
     regions = PanelPipeline.zoom_regions(decoded["panels"], decoded["bubbles"], img.width, img.height, rtl)
-    return [r.to_dict() for r in regions]
+    
+    # Get audio URLs
+    cursor.execute("""
+        SELECT panel_index, audio_path, sfx_path FROM panel_audio
+        WHERE comic_id = ? AND page_number = ?
+    """, (comic_id, page_num))
+    audio_rows = cursor.fetchall()
+    conn.close()
+    
+    audio_map = {}
+    for r in audio_rows:
+        panel_idx = r[0]
+        audio_path = r[1]
+        sfx_path = r[2]
+        
+        audio_url = None
+        sfx_url = None
+        
+        if audio_path and os.path.exists(audio_path):
+            audio_url = f"/api/audio/{comic_id}/{os.path.basename(audio_path)}"
+        if sfx_path and os.path.exists(sfx_path):
+            sfx_url = f"/api/audio/{comic_id}/{os.path.basename(sfx_path)}"
+            
+        audio_map[panel_idx] = {
+            "audioUrl": audio_url,
+            "sfxUrl": sfx_url
+        }
+        
+    res_list = []
+    for idx, r in enumerate(regions):
+        r_dict = r.to_dict()
+        audio_info = audio_map.get(idx, {"audioUrl": None, "sfxUrl": None})
+        r_dict["audioUrl"] = audio_info["audioUrl"]
+        r_dict["sfxUrl"] = audio_info["sfxUrl"]
+        res_list.append(r_dict)
+        
+    return res_list
+
+@app.get("/api/audio/{comic_id}/{filename}")
+def stream_audio(comic_id: str, filename: str):
+    # Prevent directory traversal
+    safe_filename = os.path.basename(filename)
+    audio_dir = "uploads/audio"
+    file_path = os.path.join(audio_dir, safe_filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Audio file not found")
+    return FileResponse(file_path, media_type="audio/mpeg")
 
 @app.post("/api/comics/{comic_id}/progress")
 def update_progress(comic_id: str, progress: dict):

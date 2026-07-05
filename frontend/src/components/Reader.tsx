@@ -80,9 +80,14 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
         audio.volume = 0.15; // Low background volume
         bgmAudioRef.current = audio;
       }
-      bgmAudioRef.current.play().catch((err) => {
-        console.warn("Failed to play background music:", err);
-      });
+      const playPromise = bgmAudioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          if (err.name !== "AbortError") {
+            console.warn("Failed to play background music:", err);
+          }
+        });
+      }
     } else {
       if (bgmAudioRef.current) {
         bgmAudioRef.current.pause();
@@ -121,9 +126,14 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
     if (p.sfxUrl && enableSfx) {
       const sfx = new Audio(API_URL + p.sfxUrl);
       sfxAudioRef.current = sfx;
-      sfx.play().catch((err) => {
-        console.warn("Failed to play SFX audio:", err);
-      });
+      const playPromise = sfx.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          if (err.name !== "AbortError") {
+            console.warn("Failed to play SFX audio:", err);
+          }
+        });
+      }
     }
 
     // Schedule playing the dialogue narration audio if present and enabled
@@ -131,9 +141,14 @@ export default function Reader({ comicId, onBack }: { comicId: string; onBack: (
       const playDialogue = () => {
         const audio = new Audio(API_URL + p.audioUrl);
         dialogueAudioRef.current = audio;
-        audio.play().catch((err) => {
-          console.warn("Failed to play dialogue audio:", err);
-        });
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            if (err.name !== "AbortError") {
+              console.warn("Failed to play dialogue audio:", err);
+            }
+          });
+        }
       };
 
       if (p.sfxUrl && enableSfx) {

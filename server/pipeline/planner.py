@@ -9,7 +9,7 @@ class PanelPlanner:
         self.adjacency_gap = 0.05
         self.adjacency_overlap = 0.4
         self.max_merge_count = 3
-        self.max_merged_width = 0.55
+        self.max_merged_width = 0.75  # Increased from 0.55 to allow wider horizontal panel merges on desktop
         self.max_merged_height = 0.45
         self.cut_central_min = 0.30
         self.cut_central_max = 0.70

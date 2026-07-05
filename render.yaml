@@ -1,0 +1,25 @@
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: chika-backend
+    env: docker
+    dockerfilePath: server/Dockerfile
+    plan: free
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: chika-storage
+      mountPath: /app/uploads
+      sizeGB: 10
+
+  # React Static Frontend
+  - type: web
+    name: chika-frontend
+    env: static
+    buildCommand: "cd frontend && npm install && npm run build"
+    staticPublishPath: frontend/dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        value: "https://chika-backend.onrender.com" # Auto-inject backend URL (replace with actual deployment domain if custom)

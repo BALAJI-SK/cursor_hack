@@ -1,0 +1,54 @@
+:root {
+  --bg-cream: #f4edd8;
+  --text-ink: #1e1e1e;
+  --crimson: #c82333;
+  --ochre: #d39e00;
+  --border-ink: #1e1e1e;
+}
+
+body {
+  margin: 0;
+  font-family: 'Archivo', sans-serif;
+  background-color: var(--bg-cream);
+  color: var(--text-ink);
+  /* Retro newsprint halftone-like pattern */
+  background-image: radial-gradient(var(--text-ink) 0.5px, transparent 0.5px);
+  background-size: 8px 8px;
+}
+
+.title-font {
+  font-family: 'Anton', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Pulp comic styles */
+.retro-border {
+  border: 4px solid var(--border-ink);
+  box-shadow: 6px 6px 0px var(--border-ink);
+  border-radius: 4px;
+}
+
+.retro-button {
+  background: var(--crimson);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: 3px solid var(--border-ink);
+  box-shadow: 4px 4px 0px var(--border-ink);
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.1s ease;
+}
+
+.retro-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--border-ink);
+}
+
+.retro-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--border-ink);
+}
